@@ -12,6 +12,7 @@
 #include "mr_curves.hpp"
 #include "plotting.hpp"     // to use python/matplotlib inside of c++
 #include "utilities.hpp"
+#include "ns_einstein_cartan.hpp"
 
 // --------------------------------------------------------------------
 
@@ -169,23 +170,55 @@ int create_MR_curve() {
     return 0.;
 }
 
+// computes a single neutron star in Einstein-Cartan gravity and saves the radial profile into a file
+void EC_star_single() {
+
+	// define parameters for the 'spin densits EOS':
+	double beta = 10.0;
+	double gamma = 2.0; // setting gamma=0 is somewhat broken, the pressure will not converge to zero...
+	// initial density:
+	double sat_to_code = 0.15 * 2.886376934e-6 * 939.565379;	// conversion factor from nuclear saturation density to code units
+	double rho_0 = 4.0 * sat_to_code; // central restmass density of the NS in units of the nucelar saturation density
+
+	// declare different EOS types (uncomment to use it):
+    auto EOS_DD2 = std::make_shared<EoStable>("EOS_tables/eos_HS_DD2_with_electrons.beta");
+	/*auto EOS_APR = std::make_shared<EoStable>("EOS_tables/eos_SRO_APR_SNA_version.beta");
+	auto EOS_KDE0v1 = std::make_shared<EoStable>("EOS_tables/eos_SRO_KDE0v1_SNA_version.beta");
+	auto EOS_LNS = std::make_shared<EoStable>("EOS_tables/eos_SRO_LNS_SNA_version.beta");
+	auto EOS_FSG = std::make_shared<EoStable>("EOS_tables/eos_HS_FSG_with_electrons.beta");
+	auto EOS_DD2 = std::make_shared<PolytropicEoS>(100.,2.0);*/
+
+	// init one instance:
+	NSEinsteinCartan ECstar(EOS_DD2, rho_0, beta, gamma);
+
+	// name of output textfile:
+	std::string plotname = "ECstar_beta_" + std::to_string(beta) + "_gamma_" + std::to_string(gamma);
+
+	// evaluate the model and save the intermediate data into txt file:
+	std::vector<integrator::step> results;
+    ECstar.evaluate_model(results, "output/"+plotname+".txt");
+
+	// output global variables:
+	std::cout << "calculation complete!" << std::endl;
+	std::cout << "global quantities:" << std::endl;
+	std::vector<std::string> labels = ECstar.labels();
+	std::cout << labels[0] << " " << labels[1] << " " << labels[2] << " " << labels[3] << " " << labels[4] << " " << labels[5] << " " << labels[6] << " " << labels[7] << " " << std::endl;
+	std::cout << std::fixed << std::setprecision(10) << ECstar << std::endl;
+}
+
+void EC_star_curve() {
+	// computes multiple neutron stars in Einstein-Cartan gravity and saves the mass and radii into a file
+	return;
+}
+
 int main() {
 
-    // integrate a single star
-    Example_Star();
+    // integrate a single Einstein-Cartan star:
+    EC_star_single();
 
-    // create an MR curve
-    //create_MR_curve();
-	// ----------------------------------------------------------------
-
-	// test two-fluid EOS with effective bosonic EoS:
-	//test_effectiveEOS_pure_boson_star();
+	// integrate a MR curve of Einstein-Cartan stars:
+	//EC_star_curve();
 
     // ----------------------------------------------------------------
-
-    #ifdef DEBUG_PLOTTING
-    //[> see https://github.com/lava/matplotlib-cpp/issues/268 <]
-    matplotlibcpp::detail::_interpreter::kill();
-    #endif
     return 0;
 }

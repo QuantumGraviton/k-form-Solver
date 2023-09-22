@@ -23,8 +23,8 @@ public:
 	double M_rest, C; // total restmass of the NS fluid; compactness C:=M/R
 
 
-	NSEinsteinCartan(std::shared_ptr<EquationOfState> EOS, double beta_in, double gamma_in)
-        : NSmodel(EOS), beta(beta_in), gamma(gamma_in), rho_0(0.), M_T(0.), R_NS(0.), R_99(0.), M_rest(0.), C(0.) {}
+	NSEinsteinCartan(std::shared_ptr<EquationOfState> EOS, double rho_0_in, double beta_in, double gamma_in)
+        : NSmodel(EOS), beta(beta_in), gamma(gamma_in), rho_0(rho_0_in), M_T(0.), R_NS(0.), R_99(0.), M_rest(0.), C(0.) {}
 
     //vector dy_dr(const double r, const vector& vars);  // holds the system of ODEs
 	/* The differential equations describing the neutron star in Einstein Cartan gravity. The quantities are a, alpha, P */
