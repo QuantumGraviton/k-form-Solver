@@ -206,18 +206,51 @@ void EC_star_single() {
 	std::cout << std::fixed << std::setprecision(10) << ECstar << std::endl;
 }
 
+// computes multiple neutron stars in Einstein-Cartan gravity and saves the mass and radii into a file
 void EC_star_curve() {
-	// computes multiple neutron stars in Einstein-Cartan gravity and saves the mass and radii into a file
-	return;
+	
+	const unsigned Nstars = 100; // number of stars in MR curve
+	std::vector<double> rho_c_grid(Nstars, 0.0);
+
+	// define parameters for the 'spin densits EOS': s^2 = beta*P^gamma
+	double beta = 1.0;
+	double gamma = 2.0; // setting gamma=0 is somewhat broken, the pressure will not converge to zero...
+
+	// initial density for the NSs in the MR curve:
+	double sat_to_code = 0.15 * 2.886376934e-6 * 939.565379;	// conversion factor from nuclear saturation density to code units
+	double rho_0_min = 0.5 * sat_to_code; // central restmass density of the NSs in units of the nucelar saturation density
+	double rho_0_max = 12.0 * sat_to_code;
+
+	// fill array with the initial conditions for every star:
+	utilities::fillValuesPowerLaw(rho_0_min, rho_0_max, rho_c_grid, 2);	// power law scaling of 2 or 3 works pretty well
+
+	// declare different EOS types (uncomment to use it):
+    auto EOS_DD2 = std::make_shared<EoStable>("EOS_tables/eos_HS_DD2_with_electrons.beta");
+	/*auto EOS_APR = std::make_shared<EoStable>("EOS_tables/eos_SRO_APR_SNA_version.beta");
+	auto EOS_KDE0v1 = std::make_shared<EoStable>("EOS_tables/eos_SRO_KDE0v1_SNA_version.beta");
+	auto EOS_LNS = std::make_shared<EoStable>("EOS_tables/eos_SRO_LNS_SNA_version.beta");
+	auto EOS_FSG = std::make_shared<EoStable>("EOS_tables/eos_HS_FSG_with_electrons.beta");
+	auto EOS_DD2 = std::make_shared<PolytropicEoS>(100.,2.0);*/
+
+	std::vector<NSEinsteinCartan> MR_curve;	// holds the stars in the MR curve
+
+	// compute all EC neutron stars:
+	calc_EinsteinCartan_curves(EOS_DD2, rho_c_grid, MR_curve, beta, gamma, 1);	// last argument is verbose
+
+	// name of output textfile and write values into file:
+	std::string plotname = "ECstar_curve_beta_" + std::to_string(beta) + "_gamma_" + std::to_string(gamma);
+	write_MRphi_curve<NSEinsteinCartan>(MR_curve, "output/" + plotname + ".txt");
+	std::cout << "calculation complete!" << std::endl;
+
 }
 
 int main() {
 
     // integrate a single Einstein-Cartan star:
-    EC_star_single();
+    //EC_star_single();
 
 	// integrate a MR curve of Einstein-Cartan stars:
-	//EC_star_curve();
+	EC_star_curve();
 
     // ----------------------------------------------------------------
     return 0;

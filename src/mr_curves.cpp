@@ -161,3 +161,35 @@ void FBS::calc_twofluidFBS_curves(std::shared_ptr<EquationOfState> EOS1, std::sh
     std::cout << "average time per evaluation: " << (std::chrono::duration_cast<second_type>(end3-start3).count()/(MRphi_curve.size())) << "s" << std::endl;
 
 }
+
+void FBS::calc_EinsteinCartan_curves(std::shared_ptr<EquationOfState> EOS, const std::vector<double>& rho_c_grid,std::vector<NSEinsteinCartan>& MR_curve, double beta, double gamma, int verbose) {
+
+	NSEinsteinCartan ec_model(EOS, 0.0, beta, gamma);	// create model for star
+
+    MR_curve.clear();
+    MR_curve.reserve(rho_c_grid.size());
+
+    // set initial conditions for every star in the list:
+    for(unsigned int i = 0; i < rho_c_grid.size(); i++) {
+        NSEinsteinCartan ECstar(ec_model);
+        ECstar.rho_0 = rho_c_grid[i];
+        MR_curve.push_back(ECstar);
+    }
+
+	// integrate all the stars in parallel:
+	time_point start{clock_type::now()};
+	unsigned int done = 0;
+    #pragma omp parallel for schedule(dynamic, 10)
+    for(unsigned int i = 0; i < MR_curve.size(); i++) {
+        MR_curve[i].evaluate_model();   // evaluate the model but do not save the intermediate data into txt file
+
+		#pragma omp atomic
+        done++;
+        if(verbose > 1) {std::cout << "Progress: "<< float(done) / MR_curve.size() * 100.0 << "%" << std::endl;}
+    }
+    time_point end{clock_type::now()};
+	if(verbose > 0) {
+    std::cout << "evaluation of "<< MR_curve.size() <<" stars took " << std::chrono::duration_cast<second_type>(end-start).count() << "s" << std::endl;
+    std::cout << "average time per evaluation: " << (std::chrono::duration_cast<second_type>(end-start).count()/(MR_curve.size())) << "s" << std::endl;
+	}
+}

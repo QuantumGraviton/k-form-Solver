@@ -16,6 +16,7 @@
 #include "fbs_twofluid.hpp"
 #include "fbs.hpp"
 #include "fbs_tln.hpp"
+#include "ns_einstein_cartan.hpp"
 
 namespace FBS {
 
@@ -54,5 +55,7 @@ void calc_NbNf_curves(double mu, double lambda, std::shared_ptr<EquationOfState>
 void calc_MRphik2_curve(const std::vector<FermionBosonStar>& MRphi_curve,  std::vector<FermionBosonStarTLN>& MRphik2_curve, int verbose=1);
 
 void calc_twofluidFBS_curves(std::shared_ptr<EquationOfState> EOS1, std::shared_ptr<EquationOfState> EOS2, const std::vector<double>& rho1_c_grid, const std::vector<double>& rho2_c_grid, std::vector<TwoFluidFBS>& MRphi_curve, double mu=1, double lambda=1);
+
+void calc_EinsteinCartan_curves(std::shared_ptr<EquationOfState> EOS, const std::vector<double>& rho_c_grid,std::vector<NSEinsteinCartan>& MR_curve, double beta, double gamma, int verbose = 1);
 
 }
