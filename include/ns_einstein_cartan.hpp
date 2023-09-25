@@ -38,6 +38,7 @@ public:
     static std::vector<std::string> labels();
 
     static const integrator::Event Pressure_zero;
+    static const integrator::Event Pressure_diverging;
 };
 
 std::ostream& operator<<(std::ostream&, const NSEinsteinCartan&);
