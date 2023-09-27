@@ -3,6 +3,7 @@
 #include <vector>	// for std::vector
 //#include <iomanip> 	// for std::fixed and std::fixesprecission()
 #include <memory>   // shared_ptr
+#include <sstream> // string stream
 
 #include "vector.hpp"    // include custom 5-vector class
 #include "integrator.hpp"
@@ -15,188 +16,42 @@
 #include "ns_einstein_cartan.hpp"
 
 // --------------------------------------------------------------------
-
 using namespace FBS;
 
-int Example_Star() {
-
-    // define bosonic field parameters
-    double mu = 10.;
-    double lambda = 0.;
-
-    // define EoS
-    auto EOS_DD2 = std::make_shared<EoStable>("EOS_tables/eos_HS_DD2_with_electrons.beta");
-    //auto Polytrope = std::make_shared<PolytropicEoS>();
-
-    // define central star parameters
-    double rho_0 = 0.004;
-    double phi_0 = 0.06;
-    std::vector<integrator::step> steps;
-
-    // define FBS instance
-    FermionBosonStar fbs(EOS_DD2, mu, lambda, 0., rho_0, phi_0);
-
-    // find omega through bisection
-    double omega_0 = 1., omega_1 = 10.;
-    //int bisection(double omega_0, double omega_1, int n_mode=0, int max_step=500, double delta_omega=1e-15, int verbose=0);
-    if(fbs.bisection(omega_0, omega_1) == -1)
-        return 0.;
-
-    // evaluate model
-    fbs.evaluate_model(steps);
-
-    std::cout << fbs << std::endl;
-
-    // construct TLN instance from previous instance
-    FermionBosonStarTLN fbstln(fbs);
-
-    // find phi_1_0 through bisection and evaluate
-    double phi_1_0_l = phi_0*1e-3, phi_1_0_r = 1e5*phi_0;
-    time_point p1{clock_type::now()};
-    fbstln.bisection_phi_1(phi_1_0_l, phi_1_0_r);
-
-    time_point p2{clock_type::now()};
-    fbstln.evaluate_model(steps);
-
-    time_point p3{clock_type::now()};
-
-    std::cout << fbstln << std::endl;
-    std::cout << "TLN: bisection " << std::chrono::duration_cast<second_type>(p2-p1).count() << "s, evaluation " << std::chrono::duration_cast<second_type>(p3-p2).count() << "s" << std::endl;
-
-
-    return 0;
-}
-
-
-// compute here e.g. a few configurations with the full system and with the effective EOS for different lambda, to check if they produce the same results.
-void test_effectiveEOS_pure_boson_star() {
-
-	double mu = 0.5;
-	double Lambda_int = 10.;
-	double lambda = Lambda_int*8*M_PI*mu*mu;
-
-	// create the phi_c-rho_c-grid:
-	const unsigned NstarsPhi = 10;
-	const unsigned NstarsRho = 1;
-	std::vector<double> rho_c_grid(NstarsRho, 0.0), phi_c_grid(NstarsPhi, 0.0);
-
-	double rho_cmin = 1e-10;	// = [saturation_density] / 0.15 * 2.886376934e-6 * 939.565379 -> includig conversion factors from saturation density to code units
-	double rho_cmax = 5e-3;
-	double phi_cmin = 1e-5;
-	double phi_cmax = 0.055;
-
-	utilities::fillValuesPowerLaw(phi_cmin, phi_cmax, phi_c_grid, 1);
-    utilities::fillValuesPowerLaw(rho_cmin, rho_cmax, rho_c_grid, 1);
-
-	// declare different EOS types:
-    auto EOS_DD2 = std::make_shared<EoStable>("EOS_tables/eos_HS_DD2_with_electrons.beta");
-	/*auto EOS_APR = std::make_shared<EoStable>("EOS_tables/eos_SRO_APR_SNA_version.beta");
-	auto EOS_KDE0v1 = std::make_shared<EoStable>("EOS_tables/eos_SRO_KDE0v1_SNA_version.beta");
-	auto EOS_LNS = std::make_shared<EoStable>("EOS_tables/eos_SRO_LNS_SNA_version.beta");
-	auto EOS_FSG = std::make_shared<EoStable>("EOS_tables/eos_HS_FSG_with_electrons.beta");*/
-	//auto EOS_DD2 = std::make_shared<PolytropicEoS>();
-	auto myEffectiveEOS = std::make_shared<EffectiveBosonicEoS>(mu, lambda);
-
-
-	// compute full self-consistent system:
-	// setup to compute a full NS configuration, including tidal deformability:
-	std::vector<FermionBosonStar> MRphi_curve; std::vector<FermionBosonStarTLN> MRphi_tln_curve;
-	// calc the unperturbed equilibrium solutions:
-    calc_rhophi_curves(mu, lambda, EOS_DD2, rho_c_grid, phi_c_grid, MRphi_curve, 2);
-	// calc the perturbed solutions to get the tidal love number:
-	calc_MRphik2_curve(MRphi_curve, MRphi_tln_curve, 2); // compute the perturbed solutions for TLN
-	// save the results in a txt file:
-	std::string plotname = "pureBS/1paperplot-TLN-line_pureBS_fullsys-mu_" + std::to_string(mu) + "_Lambdaint_" + std::to_string(Lambda_int);
-	//plotname = "tidal_pureEOS_KDE0v1_fullsys";
-	//write_MRphi_curve<FermionBosonStar>(MRphi_curve, "plots/" + plotname + ".txt");
-	write_MRphi_curve<FermionBosonStarTLN>(MRphi_tln_curve, "plots/" + plotname + ".txt");
-
-	// compute effective two-fluid model:
-	std::vector<TwoFluidFBS> twofluid_MRphi_curve;
-	calc_twofluidFBS_curves(EOS_DD2, myEffectiveEOS, rho_c_grid, phi_c_grid, twofluid_MRphi_curve, mu, lambda);	// use the effective EOS
-	plotname = "pureBS/1paperplot-TLN-line_pureBS_effsys-mu_" + std::to_string(mu) + "_Lambdaint_" + std::to_string(Lambda_int);
-	//plotname = "tidal_pureEOS_APR_twofluid";
-	//plotname = "rhophi-diagram_DD2_twofluid_" + std::to_string(mu) + "_" + std::to_string(lambda);
-	write_MRphi_curve<TwoFluidFBS>(twofluid_MRphi_curve, "plots/" + plotname + ".txt");
-}
-
-
-int create_MR_curve() {
-
-    const unsigned Nstars = 30;     // number of stars in MR curve of constant Phi_c
-    const unsigned NstarsPhi = 30;   // number of MR curves of constant rho_c
-
-    // define common star parameters:
-    double mu = 1.;        // DM mass
-    double lambda = 0.0;   // self-interaction parameter
-
-    constexpr bool calcTln = true;
-
-    // declare different EOS types:
-    auto EOS_DD2 = std::make_shared<EoStable>("EOS_tables/eos_HS_DD2_with_electrons.beta");
-    auto Polytrope = std::make_shared<PolytropicEoS>();
-
-
-    // declare initial conditions:
-    double rho_cmin = 0.;   // central density of first star (good for DD2 is 0.0005)
-    double phi_cmin = 0.;    // central value of scalar field of first star
-    double rho_cmax = 5e-3;
-    double phi_cmax = 0.1;
-
-    std::vector<double> rho_c_grid(Nstars, 0.), phi_c_grid(NstarsPhi, 0.), NbNf_grid;
-
-    utilities::fillValuesPowerLaw(phi_cmin, phi_cmax, phi_c_grid, 3);
-    utilities::fillValuesPowerLaw(rho_cmin, rho_cmax, rho_c_grid, 3);
-    //utilities::fillValuesLogarithmic(phi_cmin, phi_cmax, phi_c_grid);
-    //utilities::fillValuesLogarithmic(rho_cmin, rho_cmax, rho_c_grid);
-
-	// setup to compute a full NS configuration, including tidal deformability:
-	std::vector<FermionBosonStar> MRphi_curve;
-	std::vector<FermionBosonStarTLN> MRphi_tln_curve;
-
-	// calc the unperturbed equilibrium solutions
-    // this benefits greatly from multiple threads
-    calc_rhophi_curves(mu, lambda, EOS_DD2, rho_c_grid, phi_c_grid, MRphi_curve, 2);
-	// calc the perturbed solutions to get the tidal love number
-    if(calcTln)
-	    calc_MRphik2_curve(MRphi_curve, MRphi_tln_curve, 2); // compute the perturbed solutions for TLN
-
-    // save results in file
-    if(calcTln)
-        write_MRphi_curve<FermionBosonStarTLN>(MRphi_tln_curve, "plots/tlncurve_mu1.0_lambda0.0_30x30.txt");
-    else
-        write_MRphi_curve<FermionBosonStar>(MRphi_curve, "plots/curve_mu1.0_lambda0.0_30x30.txt");
-
-    return 0.;
-}
-
 // computes a single neutron star in Einstein-Cartan gravity and saves the radial profile into a file
-void EC_star_single() {
+// double rho_0 [in saturation density], double beta, double gamma, string EOS_name
+void EC_star_single(double rho_0_in, double beta_in, double gamma_in, std::string EOS_in) {
 
-	// define parameters for the 'spin densits EOS':
-	double beta = 10.0;
-	double gamma = 2.0; // setting gamma=0 is somewhat broken, the pressure will not converge to zero...
+	// define parameters for the 'spin densits EOS': s^2 = beta*P^gamma
+	double beta = beta_in;
+	double gamma = gamma_in; // setting gamma=0 is somewhat broken, the pressure will not converge to zero...
 	// initial density:
-	double sat_to_code = 0.15 * 2.886376934e-6 * 939.565379;	// conversion factor from nuclear saturation density to code units
-	double rho_0 = 4.0 * sat_to_code; // central restmass density of the NS in units of the nucelar saturation density
+	const double sat_to_code = 0.15 * 2.886376934e-6 * 939.565379;	// conversion factor from nuclear saturation density to code units
+	double rho_0 = rho_0_in * sat_to_code; // central restmass density of the NS in units of the nucelar saturation density
 
-	// declare different EOS types (uncomment to use it):
-    auto EOS_DD2 = std::make_shared<EoStable>("EOS_tables/eos_HS_DD2_with_electrons.beta");
-	/*auto EOS_APR = std::make_shared<EoStable>("EOS_tables/eos_SRO_APR_SNA_version.beta");
-	auto EOS_KDE0v1 = std::make_shared<EoStable>("EOS_tables/eos_SRO_KDE0v1_SNA_version.beta");
-	auto EOS_LNS = std::make_shared<EoStable>("EOS_tables/eos_SRO_LNS_SNA_version.beta");
-	auto EOS_FSG = std::make_shared<EoStable>("EOS_tables/eos_HS_FSG_with_electrons.beta");
-	auto EOS_DD2 = std::make_shared<PolytropicEoS>(100.,2.0);*/
+	// select correct EOS type:
+	std::string EOS_filepath = "";
+	     if(EOS_in == "EOS_DD2")    { EOS_filepath = "EOS_tables/eos_HS_DD2_with_electrons.beta";}
+	else if(EOS_in == "EOS_APR")    { EOS_filepath = "EOS_tables/eos_SRO_APR_SNA_version.beta";}
+	else if(EOS_in == "EOS_KDE0v1") { EOS_filepath = "EOS_tables/eos_SRO_KDE0v1_SNA_version.beta";}
+	else if(EOS_in == "EOS_LNS")    { EOS_filepath = "EOS_tables/eos_SRO_LNS_SNA_version.beta";}
+	else if(EOS_in == "EOS_FSG")    { EOS_filepath = "EOS_tables/eos_HS_FSG_with_electrons.beta";}
+	else { std::cout << "Wrong EOS! Supported EOS are: 'EOS_DD2'  'EOS_APR'  'EOS_KDE0v1'  'EOS_LNS'  'EOS_FSG' !" << std::endl; return;}
+	auto myEOS = std::make_shared<EoStable>(EOS_filepath); // (load the EOS)
 
-	// init one instance:
-	NSEinsteinCartan ECstar(EOS_DD2, rho_0, beta, gamma);
+	// initialize one instance:
+	NSEinsteinCartan ECstar(myEOS, rho_0, beta, gamma);
 
-	// name of output textfile:
-	std::string plotname = "ECstar_beta_" + std::to_string(beta) + "_gamma_" + std::to_string(gamma);
+	// name of output textfile. Use stringstream for dynamic naming of output file:
+	std::stringstream stream; std::string tmp;
+	std::string plotname = "ECstar_profile_" + EOS_in + "_rho0_"; stream << std::fixed << std::setprecision(10) << rho_0_in; 
+	stream >> tmp; plotname += (tmp + "_beta_");  stream = std::stringstream(); stream << std::fixed << std::setprecision(10) << beta;
+	stream >> tmp; plotname += (tmp + "_gamma_"); stream = std::stringstream(); stream << std::fixed << std::setprecision(10) << gamma;
+	stream >> tmp; plotname += tmp;
 
 	// evaluate the model and save the intermediate data into txt file:
 	std::vector<integrator::step> results;
-    ECstar.evaluate_model(results, "output/"+plotname+".txt");
+    ECstar.evaluate_model(results, "output/" + plotname + ".txt");
 
 	// output global variables:
 	std::cout << "calculation complete!" << std::endl;
@@ -204,53 +59,63 @@ void EC_star_single() {
 	std::vector<std::string> labels = ECstar.labels();
 	std::cout << labels[0] << " " << labels[1] << " " << labels[2] << " " << labels[3] << " " << labels[4] << " " << labels[5] << " " << labels[6] << " " << labels[7] << " " << std::endl;
 	std::cout << std::fixed << std::setprecision(10) << ECstar << std::endl;
+	std::cout << "Name of output file:" << std::endl << "output/" + plotname + ".txt" << std::endl;
 }
 
 // computes multiple neutron stars in Einstein-Cartan gravity and saves the mass and radii into a file
-void EC_star_curve() {
+// unsigned Nstars, double rho0_min [in saturation density], double rho0_max [in saturation density], double beta, double gamma, string EOS_name:
+void EC_star_curve(unsigned Nstars_in, double rho_0_min_in, double rho_0_max_in, double beta_in, double gamma_in, std::string EOS_in) {
 	
-	const unsigned Nstars = 100; // number of stars in MR curve
+	unsigned Nstars = Nstars_in; // number of stars in MR curve
 	std::vector<double> rho_c_grid(Nstars, 0.0);
 
 	// define parameters for the 'spin densits EOS': s^2 = beta*P^gamma
-	double beta = 1.0;
-	double gamma = 2.0; // setting gamma=0 is somewhat broken, the pressure will not converge to zero...
-
-	// initial density for the NSs in the MR curve:
-	double sat_to_code = 0.15 * 2.886376934e-6 * 939.565379;	// conversion factor from nuclear saturation density to code units
-	double rho_0_min = 0.5 * sat_to_code; // central restmass density of the NSs in units of the nucelar saturation density
-	double rho_0_max = 12.0 * sat_to_code;
+	double beta = beta_in;
+	double gamma = gamma_in; // setting gamma=0 is somewhat broken, the pressure will not converge to zero...
+	// lowest and highest initial densities for the NSs in the MR curve:
+	const double sat_to_code = 0.15 * 2.886376934e-6 * 939.565379;	// conversion factor from nuclear saturation density to code units
+	double rho_0_min = rho_0_min_in * sat_to_code; // central restmass density of the NSs in units of the nucelar saturation density
+	double rho_0_max = rho_0_max_in * sat_to_code;
 
 	// fill array with the initial conditions for every star:
 	utilities::fillValuesPowerLaw(rho_0_min, rho_0_max, rho_c_grid, 2);	// power law scaling of 2 or 3 works pretty well
 
-	// declare different EOS types (uncomment to use it):
-    auto EOS_DD2 = std::make_shared<EoStable>("EOS_tables/eos_HS_DD2_with_electrons.beta");
-	/*auto EOS_APR = std::make_shared<EoStable>("EOS_tables/eos_SRO_APR_SNA_version.beta");
-	auto EOS_KDE0v1 = std::make_shared<EoStable>("EOS_tables/eos_SRO_KDE0v1_SNA_version.beta");
-	auto EOS_LNS = std::make_shared<EoStable>("EOS_tables/eos_SRO_LNS_SNA_version.beta");
-	auto EOS_FSG = std::make_shared<EoStable>("EOS_tables/eos_HS_FSG_with_electrons.beta");
-	auto EOS_DD2 = std::make_shared<PolytropicEoS>(100.,2.0);*/
-
-	std::vector<NSEinsteinCartan> MR_curve;	// holds the stars in the MR curve
+	// select correct EOS type:
+	std::string EOS_filepath = "";
+	     if(EOS_in == "EOS_DD2")    { EOS_filepath = "EOS_tables/eos_HS_DD2_with_electrons.beta";}
+	else if(EOS_in == "EOS_APR")    { EOS_filepath = "EOS_tables/eos_SRO_APR_SNA_version.beta";}
+	else if(EOS_in == "EOS_KDE0v1") { EOS_filepath = "EOS_tables/eos_SRO_KDE0v1_SNA_version.beta";}
+	else if(EOS_in == "EOS_LNS")    { EOS_filepath = "EOS_tables/eos_SRO_LNS_SNA_version.beta";}
+	else if(EOS_in == "EOS_FSG")    { EOS_filepath = "EOS_tables/eos_HS_FSG_with_electrons.beta";}
+	else { std::cout << "Wrong EOS! Supported EOS are: 'EOS_DD2'  'EOS_APR'  'EOS_KDE0v1'  'EOS_LNS'  'EOS_FSG' !" << std::endl; return;}
+	auto myEOS = std::make_shared<EoStable>(EOS_filepath); // (load the EOS)
 
 	// compute all EC neutron stars:
-	calc_EinsteinCartan_curves(EOS_DD2, rho_c_grid, MR_curve, beta, gamma, 1);	// last argument is verbose
+	std::vector<NSEinsteinCartan> MR_curve;	// holds the stars in the MR curve
+	calc_EinsteinCartan_curves(myEOS, rho_c_grid, MR_curve, beta, gamma, 1);	// last argument is verbose
 
-	// name of output textfile and write values into file:
-	std::string plotname = "ECstar_curve_beta_" + std::to_string(beta) + "_gamma_" + std::to_string(gamma);
+	// name of output textfile. Use stringstream for dynamic naming of output file:
+	std::stringstream stream; std::string tmp;
+	std::string plotname = "ECstar_curve_" + EOS_in + "_beta_"; stream << std::fixed << std::setprecision(10) << beta; 
+	stream >> tmp; plotname += (tmp + "_gamma_"); stream = std::stringstream(); stream << std::fixed << std::setprecision(10) << gamma;
+	stream >> tmp; plotname += tmp;
+
 	write_MRphi_curve<NSEinsteinCartan>(MR_curve, "output/" + plotname + ".txt");
 	std::cout << "calculation complete!" << std::endl;
-
+	std::cout << "parameters: beta gamma" << std::endl;
+	std::cout << std::fixed << std::setprecision(10) << beta << " " << gamma << std::endl;
+	std::cout << "Name of output file:" << std::endl << "output/" + plotname + ".txt" << std::endl;
 }
 
 int main() {
 
     // integrate a single Einstein-Cartan star:
-    //EC_star_single();
+	// double rho0 [in saturation density], double beta, double gamma, string EOS_name:
+    EC_star_single(4.0, 10.0, 2.0, "EOS_DD2");
 
 	// integrate a MR curve of Einstein-Cartan stars:
-	EC_star_curve();
+	// unsigned Nstars, double rho0_min [in saturation density], double rho0_max [in saturation density], double beta, double gamma, string EOS_name:
+	EC_star_curve(100, 0.2, 12.0, 10.0, 2.0, "EOS_DD2");
 
     // ----------------------------------------------------------------
     return 0;

@@ -36,7 +36,8 @@ vector NSEinsteinCartan::dy_dr(const double r, const vector &vars) const {
     if (P <= 0. || P < myEOS.min_P() /*|| (P-8.*M_PI*s2) <= 0.*/) {
         P = 0.;
         etot = 0.;
-		s2 = 0.; s2_prime=0.;
+		if (this->gamma == 0) {s2 = this->beta;s2_prime=0.;} // case for constant spin density
+		else {s2 = 0.; s2_prime=0.;}
     }
     else {
         etot = myEOS.get_e_from_P(P);
