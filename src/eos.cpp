@@ -327,7 +327,7 @@ double EoStable::get_P_from_e(const double e) {
 	return P_table[table_len-2] + (P_table[table_len-1] - P_table[table_len-2]) / (e_table[table_len-1] - e_table[table_len-2]) * (e- e_table[table_len-2]);
 }
 
-// obtain P from an e-tot input
+// obtain e from an P input
 double EoStable::get_e_from_P(const double P) {
 	unsigned int table_len = P_table.size();
 
@@ -346,6 +346,27 @@ double EoStable::get_e_from_P(const double P) {
 	}
     // if no value was found extrapolate linearly
 	return e_table[table_len-2] + (e_table[table_len-1] - e_table[table_len-2]) / (P_table[table_len-1] - P_table[table_len-2]) * (P - P_table[table_len-2]);
+}
+
+// obtain rho from an P input
+double EoStable::get_rho_from_P(const double P) {
+	unsigned int table_len = P_table.size();
+
+    // if we are below the table interpolate between (0.,0.) and (rho[0], P[0])
+    if (P <= P_table[0]) {
+        return 0. + (rho_table[0]-0.) / (P_table[0]-0.) * (P-0.);
+    }
+
+	// search the table for the correct value
+	for (unsigned int i = 1; i<table_len; i++) {
+		if (P_table[i] > P) {
+			// the correct value is between the ith index and the i+1th index:
+			// interpolate linearily between them:
+			return rho_table[i-1] + (rho_table[i] - rho_table[i-1]) / (P_table[i] - P_table[i-1]) * (P - P_table[i-1]);
+		}
+	}
+    // if no value was found extrapolate linearly
+	return rho_table[table_len-2] + (rho_table[table_len-1] - rho_table[table_len-2]) / (P_table[table_len-1] - P_table[table_len-2]) * (P - P_table[table_len-2]);
 }
 
 // obtain dP/drho from a rho input

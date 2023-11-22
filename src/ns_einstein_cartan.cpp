@@ -130,7 +130,11 @@ void NSEinsteinCartan::evaluate_model(std::vector<integrator::step> &results, st
     // option to save all the radial profiles into a txt file:
     if (!filename.empty())
     {
-        plotting::save_integration_data(results, {0, 1, 2}, {"a", "alpha", "P"}, filename);
+		// add two columns for the energy density and restmass density to the results array:
+		for(unsigned i=0; i< results.size(); i++) {
+			results[i].second = vector({results[i].second[0], results[i].second[1], results[i].second[2], this->EOS->get_e_from_P(results[i].second[2]), this->EOS->get_rho_from_P(results[i].second[2])});
+		}
+        plotting::save_integration_data(results, {0, 1, 2, 3, 4}, {"a", "alpha", "P", "e", "rho"}, filename);
     }
 
     this->calculate_star_parameters(results, events);

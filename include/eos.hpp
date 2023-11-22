@@ -22,6 +22,7 @@ public:
     virtual double get_P_from_rho(const double rho, const double epsilon)  = 0;
 	virtual double get_P_from_e(const double e)  = 0;
 	virtual double get_e_from_P(const double P)  = 0;
+	virtual double get_rho_from_P(const double P) = 0;
     virtual double dP_drho(const double rho, double epsilon) = 0;
 	virtual double dP_de(const double e) = 0;
 
@@ -167,6 +168,7 @@ public:
     double get_P_from_rho(const double rho, const double epsilon);
 	double get_P_from_e(const double e);
 	double get_e_from_P(const double P);
+	double get_rho_from_P(const double P);
 
     /* Functions giving minimal P and minimal rho. These depend on the lowest values in the tables */
     double min_P();
