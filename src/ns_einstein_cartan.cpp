@@ -27,24 +27,19 @@ vector NSEinsteinCartan::dy_dr(const double r, const vector &vars) const {
     // load the EOS for the NS fluid:
     EquationOfState &myEOS = *(this->EOS);
 
-	// define helper variables:
-	double s2 = this->beta * std::pow(P, this->gamma); // polytropic ansatz for the spin fluid: s^2 = beta * P^gamma
-	double s2_prime = this->beta*this->gamma*std::pow(P, this->gamma - 1.); // derivative of s^2 with respect to P
-
     // call the EOS and compute the wanted values:
     double etot=0.;	// total energy density of the fluid
-    if (P <= 0. || P < myEOS.min_P() /*|| (P-8.*M_PI*s2) <= 0.*/) {
+    if (P <= 0. || P < myEOS.min_P()) {
         P = 0.;
         etot = 0.;
-		if (this->gamma == 0) {s2 = this->beta;s2_prime=0.;} // case for constant spin density
-		else {s2 = 0.; s2_prime=0.;}
     }
     else {
         etot = myEOS.get_e_from_P(P);
-		// helper variables
-		s2 = this->beta * std::pow(P, this->gamma);
-		s2_prime = this->beta*this->gamma*std::pow(P, this->gamma - 1.);
     }
+
+	// define helper variables:
+	double s2 = this->beta * std::pow(P, this->gamma); // polytropic ansatz for the spin fluid: s^2 = beta * P^gamma
+	double s2_prime = this->beta*this->gamma*std::pow(P, this->gamma - 1.); // derivative of s^2 with respect to P
 
 	// compute the ODE:
 	double da_dr = 0.5* a *      ( (1.-a*a) / r + 8.*M_PI*r*a*a*( etot - 8.*M_PI*s2 ) );
@@ -58,13 +53,12 @@ void NSEinsteinCartan::calculate_star_parameters(const std::vector<integrator::s
 
     // compute all values of the star, including mass and radius:
     int last_index = results.size() - 1; // last index in the integration
-	const double one_plus_epsilon = 1+1e-5;
 
 	// we stop the integration when the pressure reaches zero. This corresponds to the radius of the NS.
 	// we extract the total gravitational mass M_T also at this point (outside of the NS is just Schwarzschild):
 	//R_NS = results[last_index].first;
 	for (unsigned i = 1; i < results.size(); i++) {
-        if (results[i].second[2] < P_ns_min || results[i].second[2] < this->EOS->min_P() || results[i].second[2] < one_plus_epsilon*results[last_index].second[2]) {
+        if (results[i].second[2] < P_ns_min || results[i].second[2] < this->EOS->min_P()) {
             R_NS = results[i].first; // radius uf NS
             break;
         }
@@ -81,7 +75,7 @@ void NSEinsteinCartan::calculate_star_parameters(const std::vector<integrator::s
         r[i] = results[i].first;
         v = results[i].second;
         // P = v[2]
-        if (v[2] < P_ns_min || v[2] < this->EOS->min_P() || v[2] < one_plus_epsilon*results[last_index].second[2]) {rho = 0.;}
+        if (v[2] < P_ns_min || v[2] < this->EOS->min_P()) {rho = 0.;}
         else {this->EOS->callEOS(rho, eps, v[2]);}
         N_F_integrand[i] = 4.*M_PI * v[0] * rho * r[i] * r[i];
 	}
@@ -122,7 +116,7 @@ void NSEinsteinCartan::evaluate_model(std::vector<integrator::step> &results, st
     integrator::IntegrationOptions intOpts;
     intOpts.save_intermediate = true;
     // stop integration if pressure is zero:
-    std::vector<integrator::Event> events = {NSEinsteinCartan::Pressure_zero, Pressure_diverging};
+    std::vector<integrator::Event> events = {Pressure_zero, Pressure_diverging};
     results.clear();
 
     this->integrate(results, events, this->get_initial_conditions(), intOpts); // integrate the star
