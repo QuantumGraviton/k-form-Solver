@@ -139,6 +139,23 @@ void NSEinsteinCartan::shooting_constant_Mass(double wanted_mass, double accurac
     double my_MT;
     double rho_0_init = this->rho_0;
 
+    // failsafe check in case that the wanted mass is not attainable with the maximum possible density/pressure, given by 8pi*beta*gamma*p^(gamma-1) == 1
+    // first compute the star at the highest possible density (rather with density an epsilon smaller to be numerically unproblematic to compute):
+    double max_possible_densiy = 10.;
+    if (this->beta > 0.0) {
+        max_possible_densiy = this->EOS->get_rho_from_P(pow(8.*M_PI*this->beta*this->gamma, 1./(1.-this->gamma)));
+        this->rho_0 = max_possible_densiy - 1e-8;
+        this->evaluate_model();
+        if (this->M_T < wanted_mass) { // in this case, the bisection will automatically not be able to converge
+            //std::cout << "failsave activated in NSEinsteinCartan::shooting_constant_Mass" << std::endl;
+            this->rho_0 = 0.0;
+            this->evaluate_model(); // set to zero
+            return;
+        }
+    }
+    
+
+    this->rho_0 = rho_0_init;
     int i = 0;
     while (i<max_steps) {
         i++;
@@ -155,6 +172,7 @@ void NSEinsteinCartan::shooting_constant_Mass(double wanted_mass, double accurac
         }
         // the wanted mass is above the calculated mass. Increase the rho_0 for higher mass
         rho_0_init = rho_0_init*1.5;
+        if (rho_0_init > max_possible_densiy) {rho_0_init = max_possible_densiy- 1e-8;break;}
         this->rho_0 = rho_0_init;
         continue;
     }
