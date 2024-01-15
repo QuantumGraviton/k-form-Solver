@@ -134,6 +134,72 @@ void NSEinsteinCartan::evaluate_model(std::vector<integrator::step> &results, st
     this->calculate_star_parameters(results, events);
 }
 
+void NSEinsteinCartan::shooting_constant_Mass(double wanted_mass, double accuracy, int max_steps) {
+    // calc the FBS solution once using an initial rho0 value
+    double my_MT;
+    double rho_0_init = this->rho_0;
+
+    int i = 0;
+    while (i<max_steps) {
+        i++;
+        this->evaluate_model();
+        // obtain the current mass
+        my_MT = this->M_T;
+        // check if obtained mass is above the wanted mass
+        // if yes, we perform a bisection search in the range [0, rho_0_init]
+        // if no, we increase rho_0_init by an amount and perform the above steps again
+
+        if (wanted_mass < my_MT) {
+            // the calculated mass is above the wanted mass. We can now perform the bisection search!
+            break;
+        }
+        // the wanted mass is above the calculated mass. Increase the rho_0 for higher mass
+        rho_0_init = rho_0_init*1.5;
+        this->rho_0 = rho_0_init;
+        continue;
+    }
+
+    // now perform the bisection until the wanted accuracy is reached:
+    // define a few local variables:
+    double rho_c_0 = 1e-5;  // this variable might need to be changed for fringe cases
+    double rho_c_1 = rho_0_init;
+    double rho_c_mid = (rho_c_0 + rho_c_1) / 2.;
+    // mass of the lower, mid and upper point in rho0
+    double mymass_0;
+    double mymass_mid;
+    double mymass_1 = my_MT;
+
+    this->rho_0 = rho_c_0;
+
+    this->evaluate_model();
+    mymass_0 = this->M_T;
+
+    i = 0;
+    // continue bisection until the wanted accuracy was reached
+    while ( (std::abs(mymass_0 - mymass_1) > accuracy) && (i < max_steps) ) {
+        i++;
+        rho_c_mid = (rho_c_0 + rho_c_1) / 2.;
+        this->rho_0 = rho_c_mid;
+        this->evaluate_model();
+        // obtain the current mass
+        mymass_mid = this->M_T;
+
+        if (mymass_mid < wanted_mass) {
+            // the mid point is below the wanted ratio and we can adjust the lower bound
+            mymass_0 = mymass_mid;
+            rho_c_0 = rho_c_mid;
+            continue;
+        }
+        else if (mymass_mid > wanted_mass) {
+            // the mid point is above the wanted ratio and we can adjust the upper bound
+            mymass_1 = mymass_mid;
+            rho_c_1 = rho_c_mid;
+            continue;
+        }
+    }
+    // the now obtained rho0 value is now optimized for the wanted gravitational mass and we can quit the function
+}
+
 std::ostream& FBS::operator<<(std::ostream &os, const NSEinsteinCartan &fbs) {
 
     return os << fbs.M_T << " "					// total gravitational mass in [M_sun]
@@ -143,11 +209,12 @@ std::ostream& FBS::operator<<(std::ostream &os, const NSEinsteinCartan &fbs) {
               << fbs.M_rest << " "				// total particle number of NS fluid (total restmass) in [M_sun]
               << fbs.C << " "					// Compactness = M_T / R_NS
 			  << fbs.beta << " "				// beta-parameter for spin fluid model
-			  << fbs.gamma 						// gamma-parameter for spin fluid model
-			  ;
+			  << fbs.gamma << " "						// gamma-parameter for spin fluid model
+			  << 8.*M_PI*fbs.beta*fbs.gamma*pow(fbs.EOS->get_P_from_rho(fbs.rho_0, 0.),fbs.gamma-1) << " "
+              << 16.*M_PI*fbs.beta*pow(fbs.EOS->get_P_from_rho(fbs.rho_0, 0.),fbs.gamma);
 }
 
 std::vector<std::string> NSEinsteinCartan::labels() {
 	// labels for the Einstein-Cartan NS case:
-    return std::vector<std::string>({"M_T", "rho_0", "R_NS", "R_99", "M_rest", "C", "beta", "gamma"});
+    return std::vector<std::string>({"M_T", "rho_0", "R_NS", "R_99", "M_rest", "C", "beta", "gamma", "kbgPg-1", "2kbPg"});
 }
