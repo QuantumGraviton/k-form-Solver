@@ -1,18 +1,10 @@
 import numpy as np
-import os
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
-# loads the custum FBS data values from a file written by the cpp code
-def load_file(filename):
-    f = open(filename)
-    l0 = next(f)
-    labels = l0.replace('#', '').strip().split('\t')
-    indices = dict([(labels[i].strip(), i) for i in range(len(labels))])
-    f.close()
-    data = np.loadtxt(filename) #, delimeter = ' ')
-    return data, indices
-
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'pyfbs'))
+import data	#import file to read in data
 
 # load in data:
 number_of_files = 2 #
@@ -23,11 +15,11 @@ indices = [None]*number_of_files
 filenames[0] = "../output/ECstar_profile_EOS_DD2_rho0_4.0000000000_beta_0.0000000000_gamma_2.0000000000.txt"
 filenames[1] = "../output/ECstar_profile_EOS_APR_rho0_4.0000000000_beta_0.0000000000_gamma_2.0000000000.txt"
 #
-filenames[0] = "../output/ECstar_profile_EOS_APR_rho0_4.0000000000_beta_0.0000000000_gamma_55.0000000000.txt"
-filenames[1] = "../output/ECstar_profile_EOS_APR_rho0_4.0000000000_beta_0.0300000000_gamma_55.0000000000.txt"
+#filenames[0] = "../output/ECstar_profile_EOS_APR_rho0_4.0000000000_beta_0.0000000000_gamma_55.0000000000.txt"
+#filenames[1] = "../output/ECstar_profile_EOS_APR_rho0_4.0000000000_beta_0.0300000000_gamma_55.0000000000.txt"
 
 for i in range(len(filenames)):
-	df[i], indices[i] = load_file(filenames[i])
+	df[i], indices[i] = data.load_file(filenames[i])
 	#print(indices[i])
 
 indices_star = indices[0]
@@ -50,7 +42,7 @@ axs = gs.subplots(sharex='col')#, sharey='row')
 
 
 
-axs[0].plot(df[0][:,indices_star['r']]*code_to_km, df[0][:,indices_star['e']], lw=linew, ls = "-", color ="#DF5327", label="$e(r)$, DD2")
+#axs[0].plot(df[0][:,indices_star['r']]*code_to_km, df[0][:,indices_star['e']], lw=linew, ls = "-", color ="#DF5327", label="$e(r)$, DD2")
 
 Omega_kep = np.sqrt(2.2964173616 / pow(8.6584375001,3)) # Keplerian rotation DD2 model
 #Omega_kep = np.sqrt(1.5983200402 / pow(7.7735937501,3)) # Keplerian rotation APR model
@@ -160,16 +152,18 @@ axs[1].legend(loc="upper left", fontsize = 9)
 
 # shared x-axis label of the plot
 plt.xlabel("Radius $r$ [km]", fontsize = 18)
+# shared y-axis label
 axs[0].set_ylabel("$\kappa s^2$ [$M_\odot / R_{g\odot}^3$]", fontsize = 18)
 axs[1].set_ylabel("$\kappa s^2/e$ [$\%$]", fontsize = 18)
-# shared y-axis label
-#fig.text(0.02, 0.5, ylabeltot, fontsize = 14, va='center', rotation='vertical')
 
 # prevent labels on the "inside" between the subplots:
 for ax in axs:
 	ax.label_outer()
 		
 # plot labeling etc.:
+# text in the plot:
+axs[0].text(11.1, 0.000095, "DD2 EOS", fontsize = 12, rotation='horizontal', c="green")
+axs[0].text(6.6, 0.000055, "APR EOS", fontsize = 12, rotation='horizontal', c="blue")
 
 #plt.title("relative error for $M_{tot}$ and $N_{B}$ inside stab region", fontsize = 18)
 #plt.xlabel("Radius $r$ [km]", fontsize = 18)
@@ -182,7 +176,7 @@ for ax in axs:
 #plt.xlim((0.,15.))
 #plt.legend(loc="upper right", fontsize = 11) #loc="lower left" or "upper right"
 
-figname = "test4_rotationtest.pdf"
+figname = "Figure1.pdf"
 plt.savefig(figname, dpi=400, bbox_inches='tight')
 print("Saved figure as: " + figname)
 #plt.show()
