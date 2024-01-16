@@ -136,8 +136,9 @@ print( max(kappas2 / df[1][:,indices_star['e']]) )
 axs[0].set_yscale("linear") # "log" or "linear"
 axs[1].set_yscale("log") # "log" or "linear"
 
-axs[0].set_ylim((1e-7,0.002))
+#axs[0].set_ylim((1e-7,0.002))
 axs[0].set_ylim((0,1.5e-4))
+axs[0].ticklabel_format(axis="y",scilimits=(0,0))
 axs[1].set_ylim((1e-3,20))
 
 axs[0].set_xlim((0.,14.))
@@ -164,6 +165,7 @@ for ax in axs:
 # text in the plot:
 axs[0].text(11.1, 0.000095, "DD2 EOS", fontsize = 12, rotation='horizontal', c="green")
 axs[0].text(6.6, 0.000055, "APR EOS", fontsize = 12, rotation='horizontal', c="blue")
+axs[0].text(4.8, 0.00009, "Preliminary", fontsize = 24, rotation='horizontal', c="gray", alpha=0.5)
 
 #plt.title("relative error for $M_{tot}$ and $N_{B}$ inside stab region", fontsize = 18)
 #plt.xlabel("Radius $r$ [km]", fontsize = 18)

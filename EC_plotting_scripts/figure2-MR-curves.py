@@ -70,6 +70,6 @@ plt.fill_between(xarr, yarr1, yarr2, alpha = 0.55, color="orange")
 plt.text(7.4, 2.4, r"PSR J0952−0607", fontsize=8)
 
 
-myfigname = "MR_plot_test.pdf"
+myfigname = "Figure2-MR_plot_test.pdf"
 plt.savefig(myfigname, dpi=400, bbox_inches='tight')
 #plt.show()
