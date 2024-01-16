@@ -107,16 +107,74 @@ void EC_star_curve(unsigned Nstars_in, double rho_0_min_in, double rho_0_max_in,
 	std::cout << "Name of output file:" << std::endl << "output/" + plotname + ".txt" << std::endl;
 }
 
+// computes multiple neutron stars in Einstein-Cartan gravity and saves the mass and radii into a file
+// unsigned Nstars, double rho0_min [in saturation density], double rho0_max [in saturation density], double beta, double gamma, string EOS_name:
+void EC_star_curve_const_mass_with_different_beta(unsigned Nstars_in, double ns_mass_in, double beta_min_in, double beta_max_in, double gamma_in, std::string EOS_in) {
+	
+	unsigned Nstars = Nstars_in; // number of stars in MR curve
+	std::vector<double> beta_grid(Nstars, 0.0);
+
+	// define parameters for the 'spin densits EOS': s^2 = beta*P^gamma
+	double gamma = gamma_in; // setting gamma=0 is somewhat broken, the pressure will not converge to zero...
+	double beta_min = beta_min_in; // central restmass density of the NSs in units of the nucelar saturation density
+	double beta_max = beta_max_in;
+	// initial densities for the NSs in the MR curve:
+	const double sat_to_code = 0.15 * 2.886376934e-6 * 939.565379;	// conversion factor from nuclear saturation density to code units
+	double ns_mass = ns_mass_in;
+
+	// fill array with the initial conditions for every star:
+	utilities::fillValuesPowerLaw(beta_min, beta_max, beta_grid, 1); // linear scaling, but other scalings are possible
+
+	// select correct EOS type:
+	std::string EOS_filepath = "";
+	     if(EOS_in == "EOS_DD2")    { EOS_filepath = "EOS_tables/eos_HS_DD2_with_electrons.beta";}
+	else if(EOS_in == "EOS_APR")    { EOS_filepath = "EOS_tables/eos_SRO_APR_SNA_version.beta";}
+	else if(EOS_in == "EOS_KDE0v1") { EOS_filepath = "EOS_tables/eos_SRO_KDE0v1_SNA_version.beta";}
+	else if(EOS_in == "EOS_LNS")    { EOS_filepath = "EOS_tables/eos_SRO_LNS_SNA_version.beta";}
+	else if(EOS_in == "EOS_FSG")    { EOS_filepath = "EOS_tables/eos_HS_FSG_with_electrons.beta";}
+	else { std::cout << "Wrong EOS! Supported EOS are: 'EOS_DD2'  'EOS_APR'  'EOS_KDE0v1'  'EOS_LNS'  'EOS_FSG' !" << std::endl; return;}
+	auto myEOS = std::make_shared<EoStable>(EOS_filepath); // (load the EOS)
+
+	// compute all EC neutron stars:
+	std::vector<NSEinsteinCartan> MR_curve;	// holds the stars in the MR curve
+	calc_EinsteinCartan_curves_const_mass(myEOS, 1.0*sat_to_code, MR_curve, beta_grid, gamma, ns_mass, 1);	// last argument is verbose
+
+	// name of output textfile. Use stringstream for dynamic naming of output file:
+	std::stringstream stream; std::string tmp;
+	std::string plotname = "ECstar_curve_const_mass_with_different_beta_" + EOS_in + "_nsmass_"; stream << std::fixed << std::setprecision(10) << ns_mass; 
+	stream >> tmp; plotname += (tmp + "_gamma_"); stream = std::stringstream(); stream << std::fixed << std::setprecision(10) << gamma;
+	stream >> tmp; plotname += tmp;
+
+	write_MRphi_curve<NSEinsteinCartan>(MR_curve, "output/" + plotname + ".txt");
+	std::cout << "calculation complete!" << std::endl;
+	std::cout << "parameters: NSmass gamma" << std::endl;
+	std::cout << std::fixed << std::setprecision(10) << ns_mass << " " << gamma << std::endl;
+	std::cout << "Name of output file:" << std::endl << "output/" + plotname + ".txt" << std::endl;
+}
+
+
 int main() {
 
     // integrate a single Einstein-Cartan star:
 	// double rho0 [in saturation density], double beta, double gamma, string EOS_name:
-    EC_star_single(4.0, 10.0, 2.0, "EOS_DD2");
+    //EC_star_single(1.0, 10.0, 2.0, "EOS_DD2");
+	//EC_star_single(4.0, 0.0, 2.0, "EOS_APR");
+	EC_star_curve_const_mass_with_different_beta(200, 1.6, 0.0, 70.0, 2.0, "EOS_DD2");
 
 	// integrate a MR curve of Einstein-Cartan stars:
 	// unsigned Nstars, double rho0_min [in saturation density], double rho0_max [in saturation density], double beta, double gamma, string EOS_name:
-	EC_star_curve(100, 0.2, 12.0, 10.0, 2.0, "EOS_DD2");
+	/*EC_star_curve(200, 0.2, 12.0, 0.0, 2.0, "EOS_DD2");
+	EC_star_curve(200, 0.2, 12.0, 10.0, 2.0, "EOS_DD2");
+	EC_star_curve(200, 0.2, 12.0, 20.0, 2.0, "EOS_DD2");
+	EC_star_curve(200, 0.2, 12.0, 100.0, 2.0, "EOS_DD2");*/
 
     // ----------------------------------------------------------------
+	// Plots to create data for the figures in the paper:
+	// Figure 1:
+	//EC_star_single(4.0, 0.0, 2.0, "EOS_DD2");
+	//EC_star_single(4.0, 0.0, 2.0, "EOS_APR");
+	// Figure 2:
+	// ....
+
     return 0;
 }
