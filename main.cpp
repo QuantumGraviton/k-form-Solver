@@ -26,7 +26,7 @@ void EC_star_single(double rho_0_in, double beta_in, double gamma_in, std::strin
 	double beta = beta_in;
 	double gamma = gamma_in; // setting gamma=0 is somewhat broken, the pressure will not converge to zero...
 	// initial density:
-	const double sat_to_code = 0.15 * 2.886376934e-6 * 939.565379;	// conversion factor from nuclear saturation density to code units
+	const double sat_to_code = 0.16 * 2.886376934e-6 * 939.565379;	// conversion factor from nuclear saturation density to code units
 	double rho_0 = rho_0_in * sat_to_code; // central restmass density of the NS in units of the nucelar saturation density
 
 	// select correct EOS type:
@@ -73,7 +73,7 @@ void EC_star_curve(unsigned Nstars_in, double rho_0_min_in, double rho_0_max_in,
 	double beta = beta_in;
 	double gamma = gamma_in; // setting gamma=0 is somewhat broken, the pressure will not converge to zero...
 	// lowest and highest initial densities for the NSs in the MR curve:
-	const double sat_to_code = 0.15 * 2.886376934e-6 * 939.565379;	// conversion factor from nuclear saturation density to code units
+	const double sat_to_code = 0.16 * 2.886376934e-6 * 939.565379;	// conversion factor from nuclear saturation density to code units
 	double rho_0_min = rho_0_min_in * sat_to_code; // central restmass density of the NSs in units of the nucelar saturation density
 	double rho_0_max = rho_0_max_in * sat_to_code;
 
@@ -119,7 +119,7 @@ void EC_star_curve_const_mass_with_different_beta(unsigned Nstars_in, double ns_
 	double beta_min = beta_min_in; // central restmass density of the NSs in units of the nucelar saturation density
 	double beta_max = beta_max_in;
 	// initial densities for the NSs in the MR curve:
-	const double sat_to_code = 0.15 * 2.886376934e-6 * 939.565379;	// conversion factor from nuclear saturation density to code units
+	const double sat_to_code = 0.16 * 2.886376934e-6 * 939.565379;	// conversion factor from nuclear saturation density to code units
 	double ns_mass = ns_mass_in;
 
 	// fill array with the initial conditions for every star:
@@ -159,7 +159,6 @@ int main() {
 	// double rho0 [in saturation density], double beta, double gamma, string EOS_name:
     //EC_star_single(1.0, 10.0, 2.0, "EOS_DD2");
 	//EC_star_single(4.0, 0.0, 2.0, "EOS_APR");
-	EC_star_curve_const_mass_with_different_beta(200, 1.6, 0.0, 70.0, 2.0, "EOS_DD2");
 
 	// integrate a MR curve of Einstein-Cartan stars:
 	// unsigned Nstars, double rho0_min [in saturation density], double rho0_max [in saturation density], double beta, double gamma, string EOS_name:
@@ -175,6 +174,11 @@ int main() {
 	//EC_star_single(4.0, 0.0, 2.0, "EOS_APR");
 	// Figure 2:
 	// ....
+	// Figure 3:
+	//EC_star_curve_const_mass_with_different_beta(200, 0.8, 0.0, 10., 1.5, "EOS_DD2");
+	//EC_star_curve_const_mass_with_different_beta(200, 1.0, 0.0, 10., 1.5, "EOS_DD2");
+	//EC_star_curve_const_mass_with_different_beta(200, 1.4, 0.0, 10., 1.5, "EOS_DD2");
+	//EC_star_curve_const_mass_with_different_beta(200, 2.0, 0.0, 10., 1.5, "EOS_DD2");
 
     return 0;
 }
