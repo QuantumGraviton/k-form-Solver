@@ -35,10 +35,11 @@ public:
     void evaluate_model();
 
     // optimizes the central density to find a star with a specific mass
-    void shooting_constant_Mass(double wanted_mass, double accuracy=0.0001, int max_steps=200);
+    void shooting_constant_Mass(double wanted_mass, std::string quantity_label, double accuracy=0.0001, int max_steps=200);
 
     friend std::ostream& operator<<(std::ostream&, const NSEinsteinCartan&);
     static std::vector<std::string> labels();
+    double get_quantity(std::string quantity_label);
 
     static const integrator::Event Pressure_zero;
     static const integrator::Event Pressure_diverging;

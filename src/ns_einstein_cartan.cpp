@@ -134,9 +134,12 @@ void NSEinsteinCartan::evaluate_model(std::vector<integrator::step> &results, st
     this->calculate_star_parameters(results, events);
 }
 
-void NSEinsteinCartan::shooting_constant_Mass(double wanted_mass, double accuracy, int max_steps) {
+void NSEinsteinCartan::shooting_constant_Mass(double wanted_mass, std::string quantity_label, double accuracy, int max_steps) {
+    // failsafe checks:
+    //std::cout << quantity_label << this->get_quantity(quantity_label) << std::endl; std::exit(0);
+    if (!( (quantity_label == "M_T") || (quantity_label == "M_rest") )) { std::cout << "Error: only searches for 'M_T' and 'M_rest' are implemented. quitting function" << std::endl; return;}
     // calc the FBS solution once using an initial rho0 value
-    double my_MT;
+    double my_MT = 0.0;
     double rho_0_init = this->rho_0;
 
     // failsafe check in case that the wanted mass is not attainable with the maximum possible density/pressure, given by 8pi*beta*gamma*p^(gamma-1) == 1
@@ -146,7 +149,7 @@ void NSEinsteinCartan::shooting_constant_Mass(double wanted_mass, double accurac
         max_possible_densiy = this->EOS->get_rho_from_P(pow(8.*M_PI*this->beta*this->gamma, 1./(1.-this->gamma)));
         this->rho_0 = max_possible_densiy - 1e-8;
         this->evaluate_model();
-        if (this->M_T < wanted_mass) { // in this case, the bisection will automatically not be able to converge
+        if (this->get_quantity(quantity_label) < wanted_mass) { // in this case, the bisection will automatically not be able to converge
             //std::cout << "failsave activated in NSEinsteinCartan::shooting_constant_Mass" << std::endl;
             this->rho_0 = 0.0;
             this->evaluate_model(); // set to zero
@@ -161,7 +164,7 @@ void NSEinsteinCartan::shooting_constant_Mass(double wanted_mass, double accurac
         i++;
         this->evaluate_model();
         // obtain the current mass
-        my_MT = this->M_T;
+        my_MT = this->get_quantity(quantity_label);
         // check if obtained mass is above the wanted mass
         // if yes, we perform a bisection search in the range [0, rho_0_init]
         // if no, we increase rho_0_init by an amount and perform the above steps again
@@ -190,7 +193,7 @@ void NSEinsteinCartan::shooting_constant_Mass(double wanted_mass, double accurac
     this->rho_0 = rho_c_0;
 
     this->evaluate_model();
-    mymass_0 = this->M_T;
+    mymass_0 = this->get_quantity(quantity_label);
 
     i = 0;
     // continue bisection until the wanted accuracy was reached
@@ -200,7 +203,7 @@ void NSEinsteinCartan::shooting_constant_Mass(double wanted_mass, double accurac
         this->rho_0 = rho_c_mid;
         this->evaluate_model();
         // obtain the current mass
-        mymass_mid = this->M_T;
+        mymass_mid = this->get_quantity(quantity_label);
 
         if (mymass_mid < wanted_mass) {
             // the mid point is below the wanted ratio and we can adjust the lower bound
@@ -230,6 +233,19 @@ std::ostream& FBS::operator<<(std::ostream &os, const NSEinsteinCartan &fbs) {
 			  << fbs.gamma << " "						// gamma-parameter for spin fluid model
 			  << 8.*M_PI*fbs.beta*fbs.gamma*pow(fbs.EOS->get_P_from_rho(fbs.rho_0, 0.),fbs.gamma-1) << " "
               << 16.*M_PI*fbs.beta*pow(fbs.EOS->get_P_from_rho(fbs.rho_0, 0.),fbs.gamma);
+}
+
+double NSEinsteinCartan::get_quantity(std::string quantity_label) {
+    if (quantity_label == "M_T") { return this->M_T;}
+    if (quantity_label == "rho_0") { return this->rho_0;}
+    if (quantity_label == "R_NS") { return this->R_NS;}
+    if (quantity_label == "R_99") { return this->R_99;}
+    if (quantity_label == "M_rest") { return this->M_rest;}
+    if (quantity_label == "C") { return this->C;}
+    if (quantity_label == "beta") { return this->beta;}
+    if (quantity_label == "gamma") { return this->gamma;}
+    std::cout << "Error: label '" << quantity_label << "' not found. return zero." << std::endl;
+    return 0.0;
 }
 
 std::vector<std::string> NSEinsteinCartan::labels() {

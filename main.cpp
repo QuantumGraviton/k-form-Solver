@@ -109,7 +109,7 @@ void EC_star_curve(unsigned Nstars_in, double rho_0_min_in, double rho_0_max_in,
 
 // computes multiple neutron stars in Einstein-Cartan gravity and saves the mass and radii into a file
 // unsigned Nstars, double rho0_min [in saturation density], double rho0_max [in saturation density], double beta, double gamma, string EOS_name:
-void EC_star_curve_const_mass_with_different_beta(unsigned Nstars_in, double ns_mass_in, double beta_min_in, double beta_max_in, double gamma_in, std::string EOS_in) {
+void EC_star_curve_const_mass_with_different_beta(unsigned Nstars_in, double ns_mass_in, std::string mass_quantity_label, double beta_min_in, double beta_max_in, double gamma_in, std::string EOS_in) {
 	
 	unsigned Nstars = Nstars_in; // number of stars in MR curve
 	std::vector<double> beta_grid(Nstars, 0.0);
@@ -137,11 +137,11 @@ void EC_star_curve_const_mass_with_different_beta(unsigned Nstars_in, double ns_
 
 	// compute all EC neutron stars:
 	std::vector<NSEinsteinCartan> MR_curve;	// holds the stars in the MR curve
-	calc_EinsteinCartan_curves_const_mass(myEOS, 1.0*sat_to_code, MR_curve, beta_grid, gamma, ns_mass, 1);	// last argument is verbose
+	calc_EinsteinCartan_curves_const_mass(myEOS, 1.0*sat_to_code, MR_curve, beta_grid, gamma, ns_mass, mass_quantity_label, 1);	// last argument is verbose
 
 	// name of output textfile. Use stringstream for dynamic naming of output file:
 	std::stringstream stream; std::string tmp;
-	std::string plotname = "ECstar_curve_const_mass_with_different_beta_" + EOS_in + "_nsmass_"; stream << std::fixed << std::setprecision(10) << ns_mass; 
+	std::string plotname = "ECstar_curve_const_mass_" + mass_quantity_label + "_with_different_beta_" + EOS_in + "_nsmass_"; stream << std::fixed << std::setprecision(10) << ns_mass; 
 	stream >> tmp; plotname += (tmp + "_gamma_"); stream = std::stringstream(); stream << std::fixed << std::setprecision(10) << gamma;
 	stream >> tmp; plotname += tmp;
 
@@ -232,10 +232,10 @@ int main() {
 	// Figure 2:
 	// ....
 	// Figure 3:
-	//EC_star_curve_const_mass_with_different_beta(200, 0.8, 0.0, 10., 1.5, "EOS_DD2");
-	//EC_star_curve_const_mass_with_different_beta(200, 1.0, 0.0, 10., 1.5, "EOS_DD2");
-	//EC_star_curve_const_mass_with_different_beta(200, 1.4, 0.0, 10., 1.5, "EOS_DD2");
-	//EC_star_curve_const_mass_with_different_beta(200, 2.0, 0.0, 10., 1.5, "EOS_DD2");
+	EC_star_curve_const_mass_with_different_beta(200, 0.8, "M_T", 0.0, 10., 1.5, "EOS_DD2");
+	EC_star_curve_const_mass_with_different_beta(200, 1.0, "M_T", 0.0, 10., 1.5, "EOS_DD2");
+	EC_star_curve_const_mass_with_different_beta(200, 1.4, "M_T", 0.0, 10., 1.5, "EOS_DD2");
+	EC_star_curve_const_mass_with_different_beta(200, 2.0, "M_T", 0.0, 10., 1.5, "EOS_DD2");
 	// Figure 4:
 	EC_star_curve_rotation_rate(200, 0.6, 10.0, 0., "EOS_DD2", false); // non-rotating NS
 	EC_star_curve_rotation_rate(200, 0.6, 10.0, 714., "EOS_DD2", false);

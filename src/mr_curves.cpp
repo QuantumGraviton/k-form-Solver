@@ -226,7 +226,7 @@ void FBS::calc_EinsteinCartan_curves_beta_grid(std::shared_ptr<EquationOfState> 
 	}
 }
 
-void FBS::calc_EinsteinCartan_curves_const_mass(std::shared_ptr<EquationOfState> EOS, double rho_c_init, std::vector<NSEinsteinCartan>& MR_curve, const std::vector<double>& beta_grid, double gamma, double wanted_mass, int verbose) {
+void FBS::calc_EinsteinCartan_curves_const_mass(std::shared_ptr<EquationOfState> EOS, double rho_c_init, std::vector<NSEinsteinCartan>& MR_curve, const std::vector<double>& beta_grid, double gamma, double wanted_mass, std::string quantity_label, int verbose) {
 
 	NSEinsteinCartan ec_model(EOS, 0.0, beta_grid[0], gamma);	// create model for star
 
@@ -245,7 +245,7 @@ void FBS::calc_EinsteinCartan_curves_const_mass(std::shared_ptr<EquationOfState>
 	unsigned int done = 0;
     #pragma omp parallel for schedule(dynamic, 10)
     for(unsigned int i = 0; i < MR_curve.size(); i++) {
-        MR_curve[i].shooting_constant_Mass(wanted_mass);
+        MR_curve[i].shooting_constant_Mass(wanted_mass, quantity_label);
         MR_curve[i].evaluate_model();   // evaluate the model but do not save the intermediate data into txt file
 
 		#pragma omp atomic
