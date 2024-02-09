@@ -36,19 +36,28 @@ kappa = 8*np.pi
 
 nrows = 2
 ncols = 1
-fig = plt.figure(figsize=(6.5,5))
+fig = plt.figure(figsize=(6.5,5.5)) # or (6.5,5)
 gs = fig.add_gridspec(nrows, ncols, hspace=0.1, wspace=0)
 axs = gs.subplots(sharex='col')#, sharey='row')
 
+c1 = "forestgreen"#"green"
+c2 = "mediumblue"#"mediumslateblue"#"blue"
 
+##########################################################################################################
 
-#axs[0].plot(df[0][:,indices_star['r']]*code_to_km, df[0][:,indices_star['e']], lw=linew, ls = "-", color ="#DF5327", label="$e(r)$, DD2")
+#Compute Kelparian rotation rate for APR and DD2 EOS:
+Radius_DD2 = df[0][:,indices_star['r']][-1]
+Mass_DD2 = 0.5*Radius_DD2 * (1. - 1. / pow(df[0][:,indices_star['a']][-1], 2.) )   # M = R/2 * (1 - 1/ a(R)^2)
+Omega_kep_DD2 = np.sqrt( Mass_DD2 / pow(Radius_DD2,3) )
+print(Radius_DD2, Mass_DD2, Omega_kep_DD2)
 
-Omega_kep = np.sqrt(2.2964173616 / pow(8.6584375001,3)) # Keplerian rotation DD2 model
-#Omega_kep = np.sqrt(1.5983200402 / pow(7.7735937501,3)) # Keplerian rotation APR model
+Radius_APR = df[1][:,indices_star['r']][-1]
+Mass_APR = 0.5*Radius_APR * (1. - 1. / pow(df[1][:,indices_star['a']][-1], 2.) )   # M = R/2 * (1 - 1/ a(R)^2)
+Omega_kep_APR = np.sqrt( Mass_APR / pow(Radius_APR,3) )
+print(Radius_APR, Mass_APR, Omega_kep_APR)
+
+Omega_kep = Omega_kep_DD2 #np.sqrt(2.2964173616 / pow(8.6584375001,3)) # Keplerian rotation DD2 model
 print(Omega_kep)
-#Omega = 713. / 71780.
-#print(Omega)
 
 s2 = [0.0]*len(df[0][:,indices_star['r']])
 kappas2 = [0.0]*len(df[0][:,indices_star['r']])
@@ -63,17 +72,19 @@ for i in range(len(df[0][:,indices_star['r']])):
 	s2[i] = pow(r[i], 4) * Omega*Omega* pow(Gamma[i], 4) * pow(e[i] + P[i], 2)
 	kappas2[i] = kappa * s2[i]
 
-axs[0].plot(df[0][:,indices_star['r']]*code_to_km, kappas2*df[0][:,indices_star['e']]/df[0][:,indices_star['e']]*1, lw=linew, ls = "-", color ="green", label="$\kappa s^2 (r)$, $\Omega_{Kep}$")
-axs[1].plot(df[0][:,indices_star['r']]*code_to_km, kappas2 / df[0][:,indices_star['e']] * 100, lw=linew, ls = "-", color ="green", label="$\Omega = \Omega_{Kep}$")
-print( max(kappas2 / df[0][:,indices_star['e']]) )
+axs[0].plot(df[0][:,indices_star['r']]*code_to_km, kappas2*df[0][:,indices_star['e']]/df[0][:,indices_star['e']]*1, lw=linew, ls = "-", color =c1, label="$\Omega = \Omega_{Kep}$")
+axs[1].plot(df[0][:,indices_star['r']]*code_to_km, kappas2 / df[0][:,indices_star['e']] * 100, lw=linew, ls = "-", color =c1, label="")
+max_relative_torsion_strength_Omegakep_DD2 = max(kappas2 / df[0][:,indices_star['e']])
+print( max_relative_torsion_strength_Omegakep_DD2 )
+
 
 Omega = 0.4*Omega_kep # Keplerian rotation
 for i in range(len(df[0][:,indices_star['r']])):
 	Gamma[i] = 1. / np.sqrt(1. + Omega*Omega*r[i]*r[i])
 	s2[i] = pow(r[i], 4) * Omega*Omega* pow(Gamma[i], 4) * pow(e[i] + P[i], 2)
 	kappas2[i] = kappa * s2[i]
-axs[0].plot(df[0][:,indices_star['r']]*code_to_km, kappas2*df[0][:,indices_star['e']]/df[0][:,indices_star['e']]*1, lw=linew, ls = "--", color ="green", label="$\kappa s^2 (r)$, $0.4\Omega_{Kep}$")
-axs[1].plot(df[0][:,indices_star['r']]*code_to_km, kappas2 / df[0][:,indices_star['e']] * 100, lw=linew, ls = "--", color ="green", label="$\Omega = 0.4\Omega_{Kep}$")
+axs[0].plot(df[0][:,indices_star['r']]*code_to_km, kappas2*df[0][:,indices_star['e']]/df[0][:,indices_star['e']]*1, lw=linew, ls = "--", color =c1, label="$\Omega = 0.4\Omega_{Kep}$")
+axs[1].plot(df[0][:,indices_star['r']]*code_to_km, kappas2 / df[0][:,indices_star['e']] * 100, lw=linew, ls = "--", color =c1, label="")
 print( max(kappas2 / df[0][:,indices_star['e']]) )
 
 
@@ -82,16 +93,14 @@ for i in range(len(df[0][:,indices_star['r']])):
 	Gamma[i] = 1. / np.sqrt(1. + Omega*Omega*r[i]*r[i])
 	s2[i] = pow(r[i], 4) * Omega*Omega* pow(Gamma[i], 4) * pow(e[i] + P[i], 2)
 	kappas2[i] = kappa * s2[i]
-axs[0].plot(df[0][:,indices_star['r']]*code_to_km, kappas2*df[0][:,indices_star['e']]/df[0][:,indices_star['e']]*1, lw=linew, ls = ":", color ="green", label="$\kappa s^2 (r)$, $0.1\Omega_{Kep}$")
-axs[1].plot(df[0][:,indices_star['r']]*code_to_km, kappas2 / df[0][:,indices_star['e']] * 100, lw=linew, ls = ":", color ="green", label="$\Omega = 0.1\Omega_{Kep}$")
+axs[0].plot(df[0][:,indices_star['r']]*code_to_km, kappas2*df[0][:,indices_star['e']]/df[0][:,indices_star['e']]*1, lw=linew, ls = ":", color =c1, label="$\Omega = 0.1\Omega_{Kep}$")
+axs[1].plot(df[0][:,indices_star['r']]*code_to_km, kappas2 / df[0][:,indices_star['e']] * 100, lw=linew, ls = ":", color =c1, label="")
 print( max(kappas2 / df[0][:,indices_star['e']]) )
 
 ###################################################################################################################################################
-#Omega_kep = np.sqrt(2.2964173616 / pow(8.6584375001,3)) # Keplerian rotation DD2 model
-Omega_kep = np.sqrt(1.5983200402 / pow(7.7735937501,3)) # Keplerian rotation APR model
+Omega_kep = Omega_kep_APR #np.sqrt(1.5983200402 / pow(7.7735937501,3)) # Keplerian rotation APR model
 print(Omega_kep)
-#Omega = 713. / 71780.
-#print(Omega)
+
 
 s2 = [0.0]*len(df[1][:,indices_star['r']])
 kappas2 = [0.0]*len(df[1][:,indices_star['r']])
@@ -106,17 +115,18 @@ for i in range(len(df[1][:,indices_star['r']])):
 	s2[i] = pow(r[i], 4) * Omega*Omega* pow(Gamma[i], 4) * pow(e[i] + P[i], 2)
 	kappas2[i] = kappa * s2[i]
 
-axs[0].plot(df[1][:,indices_star['r']]*code_to_km, kappas2*df[1][:,indices_star['e']]/df[1][:,indices_star['e']]*1, lw=linew, ls = "-", color ="blue", label="$\kappa s^2 (r)$, $\Omega_{Kep}$")
-axs[1].plot(df[1][:,indices_star['r']]*code_to_km, kappas2 / df[1][:,indices_star['e']] * 100, lw=linew, ls = "-", color ="blue", label="$\Omega = \Omega_{Kep}$")
-print( max(kappas2 / df[1][:,indices_star['e']]) )
+axs[0].plot(df[1][:,indices_star['r']]*code_to_km, kappas2*df[1][:,indices_star['e']]/df[1][:,indices_star['e']]*1, lw=linew, ls = "-", color =c2, label="$\Omega = \Omega_{Kep}$")
+axs[1].plot(df[1][:,indices_star['r']]*code_to_km, kappas2 / df[1][:,indices_star['e']] * 100, lw=linew, ls = "-", color =c2, label="")
+max_relative_torsion_strength_Omegakep_APR = max(kappas2 / df[1][:,indices_star['e']])
+print( max_relative_torsion_strength_Omegakep_APR )
 
 Omega = 0.4*Omega_kep # Keplerian rotation
 for i in range(len(df[1][:,indices_star['r']])):
 	Gamma[i] = 1. / np.sqrt(1. + Omega*Omega*r[i]*r[i])
 	s2[i] = pow(r[i], 4) * Omega*Omega* pow(Gamma[i], 4) * pow(e[i] + P[i], 2)
 	kappas2[i] = kappa * s2[i]
-axs[0].plot(df[1][:,indices_star['r']]*code_to_km, kappas2*df[1][:,indices_star['e']]/df[1][:,indices_star['e']]*1, lw=linew, ls = "--", color ="blue", label="$\kappa s^2 (r)$, $0.4\Omega_{Kep}$")
-axs[1].plot(df[1][:,indices_star['r']]*code_to_km, kappas2 / df[1][:,indices_star['e']] * 100, lw=linew, ls = "--", color ="blue", label="$\Omega = 0.4\Omega_{Kep}$")
+axs[0].plot(df[1][:,indices_star['r']]*code_to_km, kappas2*df[1][:,indices_star['e']]/df[1][:,indices_star['e']]*1, lw=linew, ls = "--", color =c2, label="$\Omega = 0.4\Omega_{Kep}$")
+axs[1].plot(df[1][:,indices_star['r']]*code_to_km, kappas2 / df[1][:,indices_star['e']] * 100, lw=linew, ls = "--", color =c2, label="")
 print( max(kappas2 / df[1][:,indices_star['e']]) )
 
 
@@ -125,8 +135,8 @@ for i in range(len(df[1][:,indices_star['r']])):
 	Gamma[i] = 1. / np.sqrt(1. + Omega*Omega*r[i]*r[i])
 	s2[i] = pow(r[i], 4) * Omega*Omega* pow(Gamma[i], 4) * pow(e[i] + P[i], 2)
 	kappas2[i] = kappa * s2[i]
-axs[0].plot(df[1][:,indices_star['r']]*code_to_km, kappas2*df[1][:,indices_star['e']]/df[1][:,indices_star['e']]*1, lw=linew, ls = ":", color ="blue", label="$\kappa s^2 (r)$, $0.1\Omega_{Kep}$")
-axs[1].plot(df[1][:,indices_star['r']]*code_to_km, kappas2 / df[1][:,indices_star['e']] * 100, lw=linew, ls = ":", color ="blue", label="$\Omega = 0.1\Omega_{Kep}$")
+axs[0].plot(df[1][:,indices_star['r']]*code_to_km, kappas2*df[1][:,indices_star['e']]/df[1][:,indices_star['e']]*1, lw=linew, ls = ":", color =c2, label="$\Omega = 0.1\Omega_{Kep}$")
+axs[1].plot(df[1][:,indices_star['r']]*code_to_km, kappas2 / df[1][:,indices_star['e']] * 100, lw=linew, ls = ":", color =c2, label="")
 print( max(kappas2 / df[1][:,indices_star['e']]) )
 
 ###################################################################################################################################################
@@ -137,9 +147,9 @@ axs[0].set_yscale("linear") # "log" or "linear"
 axs[1].set_yscale("log") # "log" or "linear"
 
 #axs[0].set_ylim((1e-7,0.002))
-axs[0].set_ylim((0,1.5e-4))
+axs[0].set_ylim((0,1.75e-4))
 axs[0].ticklabel_format(axis="y",scilimits=(0,0))
-axs[1].set_ylim((1e-3,20))
+axs[1].set_ylim((1e-3,30))
 
 axs[0].set_xlim((0.,14.))
 axs[1].set_xlim((0.,14.))
@@ -148,8 +158,8 @@ axs[1].set_xlim((0.,14.))
 axs[0].grid(alpha=0.15, linestyle="--", c="black")
 axs[1].grid(alpha=0.15, linestyle="--", c="black")
 
-axs[0].legend(loc="upper left", fontsize = 9)
-axs[1].legend(loc="upper left", fontsize = 9)
+axs[0].legend(loc="upper left", fontsize = 10)
+#axs[1].legend(loc="upper left", fontsize = 9)
 
 # shared x-axis label of the plot
 plt.xlabel("Radius $r$ [km]", fontsize = 18)
@@ -163,21 +173,20 @@ for ax in axs:
 		
 # plot labeling etc.:
 # text in the plot:
-axs[0].text(11.1, 0.000095, "DD2 EOS", fontsize = 12, rotation='horizontal', c="green")
-axs[0].text(6.6, 0.000055, "APR EOS", fontsize = 12, rotation='horizontal', c="blue")
-axs[0].text(4.8, 0.00009, "Preliminary", fontsize = 24, rotation='horizontal', c="gray", alpha=0.5)
+axs[0].text(11.2, 0.000095, "DD2 EOS", fontsize = 12, rotation='horizontal', c=c1)
+axs[0].text(6.2, 0.000059, "APR EOS", fontsize = 12, rotation='horizontal', c=c2)
+axs[0].text(4.8, 0.000125, "Preliminary", fontsize = 24, rotation='horizontal', c="gray", alpha=0.5)
 
-#plt.title("relative error for $M_{tot}$ and $N_{B}$ inside stab region", fontsize = 18)
-#plt.xlabel("Radius $r$ [km]", fontsize = 18)
-#plt.ylabel("$e(r)$ [$M_\odot / R_g^3$]", fontsize = 18)
-#plt.ylabel("Field $\phi(r)$ [$M_p$]", fontsize = 18)
-#plt.grid(alpha=0.2, linestyle="--")#, c="black")
+# plot horizontal line to indicate maximal relative torsion contribution:
+axs[1].hlines(y=max_relative_torsion_strength_Omegakep_DD2*100, xmin=0.5, xmax=11.8, linewidth=1, color=c1, alpha=0.5)
+percent_value = "{:.2f}".format(max_relative_torsion_strength_Omegakep_DD2*100) + "$\,\%$"
+axs[1].text(0.5, max_relative_torsion_strength_Omegakep_DD2*100*0.5, percent_value, fontsize = 10, rotation='horizontal', c=c1)
 
-#plt.yscale("linear") # "log" or "linear"
-#plt.ylim((1e-8,0.0025))
-#plt.xlim((0.,15.))
-#plt.legend(loc="upper right", fontsize = 11) #loc="lower left" or "upper right"
+axs[1].hlines(y=max_relative_torsion_strength_Omegakep_APR*100, xmin=2.5, xmax=10.3, linewidth=1, color=c2, alpha=0.5)
+percent_value = "{:.2f}".format(max_relative_torsion_strength_Omegakep_APR*100) + "$\,\%$"
+axs[1].text(2.5, max_relative_torsion_strength_Omegakep_APR*100*0.5, percent_value, fontsize = 10, rotation='horizontal', c=c2)
 
+#############################
 figname = "Figure1.pdf"
 plt.savefig(figname, dpi=400, bbox_inches='tight')
 print("Saved figure as: " + figname)
