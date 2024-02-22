@@ -17,6 +17,7 @@
 #include "fbs.hpp"
 #include "fbs_tln.hpp"
 #include "ns_einstein_cartan.hpp"
+#include "ns_einstein_cartan_rotation.hpp"
 
 namespace FBS {
 
@@ -60,6 +61,7 @@ void calc_twofluidFBS_curves(std::shared_ptr<EquationOfState> EOS1, std::shared_
 
 void calc_EinsteinCartan_curves(std::shared_ptr<EquationOfState> EOS, const std::vector<double>& rho_c_grid,std::vector<NSEinsteinCartan>& MR_curve, double beta, double gamma, int verbose = 1);
 void calc_EinsteinCartan_curves_beta_grid(std::shared_ptr<EquationOfState> EOS, const std::vector<double>& rho_c_grid,std::vector<NSEinsteinCartan>& MR_curve, const std::vector<double>& beta_grid, double gamma = 2., int verbose = 1);
+void calc_EinsteinCartan_curves_rotation_beta_grid(std::shared_ptr<EquationOfState> EOS, const std::vector<double>& rho_c_grid,std::vector<NSEinsteinCartanRotation>& MR_curve, const std::vector<double>& beta_grid, int verbose = 1);
 
 void calc_EinsteinCartan_curves_const_mass(std::shared_ptr<EquationOfState> EOS, double rho_c_init,std::vector<NSEinsteinCartan>& MR_curve, const std::vector<double>& beta_grid, double gamma, double wanted_mass, std::string quantity_label, int verbose = 1);
 
