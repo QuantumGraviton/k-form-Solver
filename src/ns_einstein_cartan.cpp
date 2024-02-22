@@ -115,6 +115,7 @@ void NSEinsteinCartan::evaluate_model(std::vector<integrator::step> &results, st
     // define variables used in the integrator and events during integration:
     integrator::IntegrationOptions intOpts;
     intOpts.save_intermediate = true;
+    intOpts.max_stepsize = 1e-3; // smaller stepsize is needed to computethe radius more accurately
     // stop integration if pressure is zero:
     std::vector<integrator::Event> events = {Pressure_zero, Pressure_diverging};
     results.clear();
