@@ -28,16 +28,15 @@ def strip_mr_curves(masses, radii):
 number_of_files = 6
 filenames = [None]*number_of_files
 
-filenames[0] = "../output/ECstar_curve_rotation_rate_EOS_DD2_frequencyHz_0.0000000000.txt"
-filenames[1] = "../output/ECstar_curve_rotation_rate_EOS_DD2_frequencyHz_714.0000000000.txt"
-filenames[2] = "../output/ECstar_curve_rotation_rate_EOS_DD2_frequencyHz_1.0000000000.txt" # Keplerian rotation rate
-filenames[3] = "../output/ECstar_curve_rotation_rate_EOS_APR_frequencyHz_0.0000000000.txt"
-filenames[4] = "../output/ECstar_curve_rotation_rate_EOS_APR_frequencyHz_714.0000000000.txt"
-filenames[5] = "../output/ECstar_curve_rotation_rate_EOS_APR_frequencyHz_1.0000000000.txt" # Keplerian rotation rate
+filenames[0] = "../output/ECstar_curve_rotation_rate_model_simple_EOS_DD2_frequencyHz_0.0000000000.txt"
+filenames[1] = "../output/ECstar_curve_rotation_rate_model_simple_EOS_DD2_frequencyHz_716.0000000000.txt"
+filenames[2] = "../output/ECstar_curve_rotation_rate_model_simple_EOS_DD2_frequencyKep_1.0000000000.txt" # Keplerian rotation rate
+filenames[3] = "../output/ECstar_curve_rotation_rate_model_simple_EOS_APR_frequencyHz_0.0000000000.txt"
+filenames[4] = "../output/ECstar_curve_rotation_rate_model_simple_EOS_APR_frequencyHz_716.0000000000.txt"
+filenames[5] = "../output/ECstar_curve_rotation_rate_model_simple_EOS_APR_frequencyKep_1.0000000000.txt" # Keplerian rotation rate
 
 
-#label_names = ["APR","DD2","FSG","KDE0v1","LNS"]
-label_names = ["Pure DD2","$\Omega=714\,Hz$","$\Omega = \Omega_K$","Pure APR","$\Omega=714\,Hz$","$\Omega = \Omega_K$"]
+label_names = ["Pure DD2","$\Omega=716\,Hz$","$\Omega = \Omega_{Kep}$","Pure APR","$\Omega=716\,Hz$","$\Omega = \Omega_{Kep}$"]
 
 # read in data:
 df = [None]*number_of_files
@@ -113,6 +112,6 @@ plt.text(12.2, 1.4, "PSR J0030+0451 ", fontsize = 8, rotation='horizontal', c=co
 plt.text(10.7, 1.7, "Preliminary", fontsize = 26, rotation='horizontal', c="gray", alpha=0.5)
 
 
-myfigname = "Figure4-MR_for_different_rotation_rates-2.pdf"
+myfigname = "Figure4-MR_for_different_rotation_rates_model_simple.pdf"
 plt.savefig(myfigname, dpi=400, bbox_inches='tight')
 #plt.show()
