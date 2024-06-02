@@ -345,36 +345,22 @@ void EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(unsigned Nstars_i
 
 
 int main() {
-
-    // integrate a single Einstein-Cartan star:
-	// double rho0 [in saturation density], double beta, double gamma, string EOS_name:
-    //EC_star_single(1.0, 10.0, 2.0, "EOS_DD2");
-	//EC_star_single(4.0, 0.0, 2.0, "EOS_APR");
-
-	// integrate a MR curve of Einstein-Cartan stars:
-	// unsigned Nstars, double rho0_min [in saturation density], double rho0_max [in saturation density], double beta, double gamma, string EOS_name:
-	/*EC_star_curve(200, 0.2, 12.0, 0.0, 2.0, "EOS_DD2");
-	EC_star_curve(200, 0.2, 12.0, 10.0, 2.0, "EOS_DD2");
-	EC_star_curve(200, 0.2, 12.0, 20.0, 2.0, "EOS_DD2");
-	EC_star_curve(200, 0.2, 12.0, 100.0, 2.0, "EOS_DD2");*/
-
     // ----------------------------------------------------------------
 	// Plots to create data for the figures in the paper:
+	// Total run time of the code should be 15-25 min on a laptop, depending on your machine.
 	// Figure 1:
-	//EC_star_single(4.0, 0.0, 2.0, "EOS_DD2");
-	//EC_star_single(4.0, 0.0, 2.0, "EOS_APR");
+	EC_star_single(4.0, 0.0, 2.0, "EOS_DD2");
+	EC_star_single(4.0, 0.0, 2.0, "EOS_APR");
 	// Figure 2:
-	/*EC_star_curve(200, 0.6, 10.0, 0.0, 2.0, "EOS_DD2");
+	EC_star_curve(200, 0.6, 10.0, 0.0, 2.0, "EOS_DD2");
 	EC_star_curve(200, 0.6, 10.0, 10.0, 2.0, "EOS_DD2");
 	EC_star_curve(200, 0.6, 10.0, 20.0, 2.0, "EOS_DD2");
 	EC_star_curve(200, 0.6, 10.0, 100.0, 2.0, "EOS_DD2");
 	EC_star_curve(200, 0.7, 10.0, 0.0, 2.0, "EOS_APR");
 	EC_star_curve(200, 0.7, 10.0, 10.0, 2.0, "EOS_APR");
 	EC_star_curve(200, 0.7, 10.0, 20.0, 2.0, "EOS_APR");
-	EC_star_curve(200, 0.7, 10.0, 100.0, 2.0, "EOS_APR");*/
+	EC_star_curve(200, 0.7, 10.0, 100.0, 2.0, "EOS_APR");
 	// Figure 3:
-	// each configuration should run for <70 seconds (with 12 CPU threads)
-	/*
 	EC_star_curve_const_mass_with_different_beta(250, 0.8, "M_rest", 0.0, 101., 2.0, "EOS_DD2");
 	EC_star_curve_const_mass_with_different_beta(250, 1.0, "M_rest", 0.0, 101., 2.0, "EOS_DD2");
 	EC_star_curve_const_mass_with_different_beta(250, 1.4, "M_rest", 0.0, 101., 2.0, "EOS_DD2");
@@ -384,27 +370,6 @@ int main() {
 	EC_star_curve_const_mass_with_different_beta(250, 1.4, "M_rest", 0.0, 1.0e6, 3.0, "EOS_DD2");
 	EC_star_curve_const_mass_with_different_beta(250, 2.0, "M_rest", 0.0, 1.0e6, 3.0, "EOS_DD2");
 	// Figure 4:
-	
-	// part with the simple model:
-	EC_star_curve_rotation_rate_model_simple(200, 0.6, 10.0, 0., "EOS_DD2", 0.0); // non-rotating NS
-	EC_star_curve_rotation_rate_model_simple(200, 0.6, 10.0, 716., "EOS_DD2", 0.0);
-	EC_star_curve_rotation_rate_model_simple(200, 0.6, 10.0, 1., "EOS_DD2", 1.0); // Kelparian rotating NS
-
-	EC_star_curve_rotation_rate_model_simple(200, 0.7, 10.0, 0., "EOS_APR", 0.0); // non-rotating NS
-	EC_star_curve_rotation_rate_model_simple(200, 0.7, 10.0, 716., "EOS_APR", 0.0);
-	EC_star_curve_rotation_rate_model_simple(200, 0.7, 10.0, 1., "EOS_APR", 1.0); // Kelparian rotating NS
-	
-	// part with the more complex model:
-	EC_star_curve_rotation_rate_model_e_plus_P(200, 0.6, 10.0, 0., "EOS_DD2", 0.0);
-	EC_star_curve_rotation_rate_model_e_plus_P(200, 0.6, 10.0, 100., "EOS_DD2", 0.0);
-	EC_star_curve_rotation_rate_model_e_plus_P(200, 0.6, 10.0, 200., "EOS_DD2", 0.0);
-	EC_star_curve_rotation_rate_model_e_plus_P(200, 0.6, 10.0, 300., "EOS_DD2", 0.0);
-
-	EC_star_curve_rotation_rate_model_e_plus_P(200, 0.6, 10.0, 0., "EOS_DD2", 0.1);
-	EC_star_curve_rotation_rate_model_e_plus_P(200, 0.6, 10.0, 0., "EOS_DD2", 0.2);
-	EC_star_curve_rotation_rate_model_e_plus_P(200, 0.6, 10.0, 0., "EOS_DD2", 0.3);
-*/	
-	// the following cases should run for roughly 3 minutes combined (with 12 CPU threads)
 	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 0., "EOS_DD2", 0.0);
 	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 100., "EOS_DD2", 0.0);
 	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 200., "EOS_DD2", 0.0);
