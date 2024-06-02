@@ -113,8 +113,8 @@ plt.fill(df_NICER[4][:,indices_NICER[4]['R_NS']], df_NICER[4][:,indices_NICER[4]
 plt.text(13.3, 2.05, "PSR J0740+6620", fontsize = 8, rotation='horizontal', c=col_nicer1)
 plt.text(13.8, 1.4, "PSR J0030+0451 ", fontsize = 8, rotation='horizontal', c=col_nicer2)
 
-plt.text(10.7, 2.55, "Preliminary", fontsize = 26, rotation='horizontal', c="gray", alpha=0.5)
+#plt.text(10.7, 2.55, "Preliminary", fontsize = 26, rotation='horizontal', c="gray", alpha=0.5)
 
-myfigname = "Figure2-MR_plot_test.pdf"
+myfigname = "Figure2.pdf"
 plt.savefig(myfigname, dpi=400, bbox_inches='tight')
 #plt.show()

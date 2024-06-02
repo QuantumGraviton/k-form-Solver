@@ -7,10 +7,47 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'pyfbs'))
 import data	#import file to read in data
 
 def strip_mr_curves(masses, radii):
+	# remove the unstable configurations and select only stable configurations:
+	# first iterate backwards to remove all trailing unstable configs:
+	last_viable_index = 0
+	for i in range(len(masses)-1,0,-1):
+		last_viable_index = i
+		if radii[i] <= 1e-8:
+			continue
+		else:
+			break
+	masses_tmp = np.zeros(last_viable_index)
+	radii_tmp = np.zeros(last_viable_index)
+	for j in range(last_viable_index):
+		masses_tmp[j] = masses[j+1]
+		radii_tmp[j] = radii[j+1]
+
+	#print(radii)
+	#print(radii_tmp)
+	# now, iterate forewards and flag last leading unstable configuration:
+	first_viable_index = 0
+	for k in range(len(masses_tmp)):
+		if radii[k] <= 1e-9:
+			first_viable_index = k
+	
+	if first_viable_index > 0: # there are leading nonstable solutions, remove them:
+		newarrlen = len(masses_tmp)-first_viable_index
+		masses_out = np.zeros(newarrlen)
+		radii_out = np.zeros(newarrlen)
+		for m in range(newarrlen):
+			masses_out[m] = masses_tmp[m+first_viable_index]
+			radii_out[m] = radii_tmp[m+first_viable_index]
+	else:
+		masses_out = masses_tmp
+		radii_out = radii_tmp
+	#print(radii_out)
+	return masses_out, radii_out
+
+def strip_max_mr_curves(masses, radii):
 	# remove the unstable configurations after the maximum mass was reached
 	mmax = 0.0
 	maxindex = 0
-	for i in range(len(masses)):
+	for i in range(6,len(masses)):
 		maxindex = i
 		if masses[i] > mmax:
 			mmax = masses[i]
@@ -25,18 +62,26 @@ def strip_mr_curves(masses, radii):
 
 
 # load in data for the EOS comparison plot:
-number_of_files = 6
+number_of_files = 12
 filenames = [None]*number_of_files
 
-filenames[0] = "../output/ECstar_curve_rotation_rate_model_simple_EOS_DD2_frequencyHz_0.0000000000.txt"
-filenames[1] = "../output/ECstar_curve_rotation_rate_model_simple_EOS_DD2_frequencyHz_716.0000000000.txt"
-filenames[2] = "../output/ECstar_curve_rotation_rate_model_simple_EOS_DD2_frequencyKep_1.0000000000.txt" # Keplerian rotation rate
-filenames[3] = "../output/ECstar_curve_rotation_rate_model_simple_EOS_APR_frequencyHz_0.0000000000.txt"
-filenames[4] = "../output/ECstar_curve_rotation_rate_model_simple_EOS_APR_frequencyHz_716.0000000000.txt"
-filenames[5] = "../output/ECstar_curve_rotation_rate_model_simple_EOS_APR_frequencyKep_1.0000000000.txt" # Keplerian rotation rate
+filenames[0] = "../output/ECstar_curve_rotation_rate_model_e_plus_P_beta_iteration_EOS_DD2_frequencyHz_0.0000000000.txt"
+filenames[1] = "../output/ECstar_curve_rotation_rate_model_e_plus_P_beta_iteration_EOS_DD2_frequencyHz_100.0000000000.txt"
+filenames[2] = "../output/ECstar_curve_rotation_rate_model_e_plus_P_beta_iteration_EOS_DD2_frequencyHz_300.0000000000.txt" # Keplerian rotation rate
+filenames[3] = "../output/ECstar_curve_rotation_rate_model_e_plus_P_beta_iteration_EOS_DD2_frequencyKep_0.1000000000.txt"
+filenames[4] = "../output/ECstar_curve_rotation_rate_model_e_plus_P_beta_iteration_EOS_DD2_frequencyKep_0.2000000000.txt"
+filenames[5] = "../output/ECstar_curve_rotation_rate_model_e_plus_P_beta_iteration_EOS_DD2_frequencyKep_0.3000000000.txt" # Keplerian rotation rate
+
+filenames[6] = "../output/ECstar_curve_rotation_rate_model_e_plus_P_beta_iteration_EOS_APR_frequencyHz_0.0000000000.txt"
+filenames[7] = "../output/ECstar_curve_rotation_rate_model_e_plus_P_beta_iteration_EOS_APR_frequencyHz_100.0000000000.txt"
+filenames[8] = "../output/ECstar_curve_rotation_rate_model_e_plus_P_beta_iteration_EOS_APR_frequencyHz_200.0000000000.txt" # Keplerian rotation rate
+filenames[9] = "../output/ECstar_curve_rotation_rate_model_e_plus_P_beta_iteration_EOS_APR_frequencyKep_0.1000000000.txt"
+filenames[10] = "../output/ECstar_curve_rotation_rate_model_e_plus_P_beta_iteration_EOS_APR_frequencyKep_0.2000000000.txt"
+filenames[11] = "../output/ECstar_curve_rotation_rate_model_e_plus_P_beta_iteration_EOS_APR_frequencyKep_0.3000000000.txt" # Keplerian rotation rate
 
 
-label_names = ["Pure DD2","$\Omega=716\,Hz$","$\Omega = \Omega_{Kep}$","Pure APR","$\Omega=716\,Hz$","$\Omega = \Omega_{Kep}$"]
+label_names = ["Pure DD2","$f=100\,Hz$","$f=300\,Hz$","$\Omega = 0.1\Omega_{Kep}$","$\Omega = 0.2\Omega_{Kep}$","$\Omega = 0.3\Omega_{Kep}$"]
+label_names = label_names + ["Pure APR","$f=100\,Hz$","$f=200\,Hz$","$\Omega = 0.1\Omega_{Kep}$","$\Omega = 0.2\Omega_{Kep}$","$\Omega = 0.3\Omega_{Kep}$"]
 
 # read in data:
 df = [None]*number_of_files
@@ -51,6 +96,7 @@ for i in range(len(filenames)):
 	masses[i] = df[i][:,indices[i]['M_T']]
 	radii[i] = df[i][:,indices[i]['R_NS']]
 	masses[i], radii[i] = strip_mr_curves(masses[i], radii[i])
+	masses[i], radii[i] = strip_max_mr_curves(masses[i], radii[i])
 
 
 tickFontSize = 18
@@ -58,6 +104,8 @@ tickFontSize = 18
 fig = plt.figure()
 plt.xlim([10., 14.0])
 plt.ylim([0., 2.5])
+#plt.xlim([9., 15.0])
+#plt.ylim([0., 3.0])
 plt.yscale("linear")
 
 plt.xlabel("Radius [km]", fontsize = tickFontSize)
@@ -68,13 +116,18 @@ plt.grid(alpha=0.2, linestyle="--")
 #plt.scatter(13.27,1.7, label = "", marker = "*", s=200, c = "orange",zorder=2.5)
 
 c1 = "forestgreen"#"green"
+c11 = "black"
 c2 = "mediumblue"#"mediumslateblue"#"blue"
-linecolors = [c1,c1,c1,c2,c2,c2]#"#DF5327","#DF5327"]
-linestyles = ["-",":","-.","-",":","-."]
+c22 = "crimson"
+
+linecolors = [c1,c1,c1,c11,c11,c11]#"#DF5327","#DF5327"]
+linecolors = linecolors + [c2,c2,c2,c22,c22,c22]
+linestyles = ["-",":","--","-.",":","--"]
+linestyles = linestyles + ["-",":","--","-.",":","--"]
 for i in range(len(filenames)):
 	plt.plot(radii[i], masses[i], label = label_names[i], c=linecolors[i],ls=linestyles[i], lw=1.6)
 
-plt.legend(loc="lower left", fontsize = 13)
+plt.legend(loc="lower left", fontsize = 9)
 
 # add observational constraints
 xarr = [0.0, 40.]
@@ -105,13 +158,13 @@ plt.fill(df_NICER[1][:,indices_NICER[1]['R_NS']], df_NICER[1][:,indices_NICER[1]
 plt.fill(df_NICER[2][:,indices_NICER[2]['R_NS']], df_NICER[2][:,indices_NICER[2]['M_T']], alpha=0.10, c=col_nicer2, ls =":")
 plt.fill(df_NICER[3][:,indices_NICER[3]['R_NS']], df_NICER[3][:,indices_NICER[3]['M_T']], alpha=0.10, c=col_nicer2, ls ="-.")
 plt.fill(df_NICER[4][:,indices_NICER[4]['R_NS']], df_NICER[4][:,indices_NICER[4]['M_T']], alpha=0.10, c=col_nicer2, ls ="-")
-plt.text(11.7, 2.05, "PSR J0740+6620", fontsize = 8, rotation='horizontal', c=col_nicer1)
-plt.text(12.2, 1.4, "PSR J0030+0451 ", fontsize = 8, rotation='horizontal', c=col_nicer2)
+plt.text(11.55, 2.05, "PSR J0740+6620", fontsize = 8, rotation='horizontal', c=col_nicer1)
+plt.text(11.7, 1.4, "PSR J0030+0451 ", fontsize = 8, rotation='horizontal', c=col_nicer2)
 
 
-plt.text(10.7, 1.7, "Preliminary", fontsize = 26, rotation='horizontal', c="gray", alpha=0.5)
+#plt.text(10.7, 1.7, "Preliminary", fontsize = 26, rotation='horizontal', c="gray", alpha=0.5)
 
 
-myfigname = "Figure4-MR_for_different_rotation_rates_model_simple.pdf"
+myfigname = "Figure4.pdf"
 plt.savefig(myfigname, dpi=400, bbox_inches='tight')
 #plt.show()

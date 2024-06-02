@@ -1,11 +1,27 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+from matplotlib import rc
 from matplotlib.ticker import FormatStrFormatter
 
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'pyfbs'))
 import data	#import file to read in data
+
+#rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+#rc('text', usetex=True)
+
+#plt.rcParams.update({
+#    "text.usetex": True,
+#    "font.family": "sans-serif",
+#    "font.sans-serif": "Helvetica",
+#})
+
+#plt.rcParams.update({
+#    "text.usetex": True,
+#    "font.family": "Helvetica"
+#})
+
 
 def strip_curves(masses, radii, rhos, betas):
 	# remove the unstable configurations after the maximum density was reached
@@ -204,9 +220,9 @@ axs[5].legend(handles=[legend_line5], handlelength=0, handletextpad=0, loc="uppe
 
 
 # shared x-axis label of the plot
-plt.xlabel("$\\beta$ [$(M_\odot / R_{g\odot}^3)^{1-\\gamma}] / [\kappa]$", fontsize = 18)
+plt.xlabel("$\\beta$ [$(M_\odot / R_{g\odot}^3)^{1-\\gamma} / \kappa$]", fontsize = 18)
 # shared y-axis label
-axs[0].set_ylabel("$R_{NS}$ [km]", fontsize = 18)
+axs[0].set_ylabel("$R_{NS}$ [$km$]", fontsize = 18)
 axs[1].set_ylabel("$\\rho_{c}$ [$\\rho_{sat}$]", fontsize = 18)
 axs[2].set_ylabel("$\Delta M_{grav,rel}$ [$\\%$]", fontsize = 18)
 axs[3].set_ylabel("$R_{NS}$ [km]", fontsize = 18)
@@ -222,12 +238,16 @@ axs[4].yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
 		
 # plot labeling etc.:
 # text in the plot:
-axs[1].text(35., 2.25, "Preliminary", fontsize = 24, rotation='horizontal', c="gray", alpha=0.5)
-#axs[1].text(35., 13.25, "maybe try other eos or $\gamma$", fontsize = 24, rotation='horizontal', c="gray", alpha=0.5)
-#axs[0].text(6.6, 0.000055, "APR EOS", fontsize = 12, rotation='horizontal', c="blue")
+#axs[1].text(35., 2.25, "Preliminary", fontsize = 24, rotation='horizontal', c="gray", alpha=0.5)
+axs[0].text(0.02*(100-0)+0, 0.05*(13.4-12.8)+12.8, 	"a)", fontsize = 14, rotation='horizontal')
+axs[1].text(0.02*(100-0)+0, 0.05*(3.5-1)+1, 		"b)", fontsize = 14, rotation='horizontal')
+axs[2].text(0.02*(100-0)+0, 0.05*(1.0+1.5)-1.5, 	"c)", fontsize = 14, rotation='horizontal')
+axs[3].text(0.02*(0.6e6-0)+0, 0.05*(13.4-12.8)+12.8,"d)", fontsize = 14, rotation='horizontal')
+axs[4].text(0.02*(0.6e6-0)+0, 0.05*(3.5-1)+1, 		"e)", fontsize = 14, rotation='horizontal')
+axs[5].text(0.02*(0.6e6-0)+0, 0.05*(1.0+1.5)-1.5, 	"f)", fontsize = 14, rotation='horizontal')
 
 
-figname = "Figure3-2-Mrhocvsbeta-mt.pdf"
+figname = "Figure3.pdf"
 plt.savefig(figname, dpi=400, bbox_inches='tight')
 print("Saved figure as: " + figname)
 #plt.show()

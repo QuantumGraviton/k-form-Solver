@@ -175,7 +175,7 @@ for ax in axs:
 # text in the plot:
 axs[0].text(11.2, 0.000095, "DD2 EOS", fontsize = 12, rotation='horizontal', c=c1)
 axs[0].text(6.2, 0.000059, "APR EOS", fontsize = 12, rotation='horizontal', c=c2)
-axs[0].text(4.8, 0.000125, "Preliminary", fontsize = 24, rotation='horizontal', c="gray", alpha=0.5)
+#axs[0].text(4.8, 0.000125, "Preliminary", fontsize = 24, rotation='horizontal', c="gray", alpha=0.5)
 
 # plot horizontal line to indicate maximal relative torsion contribution:
 axs[1].hlines(y=max_relative_torsion_strength_Omegakep_DD2*100, xmin=0.5, xmax=11.8, linewidth=1, color=c1, alpha=0.5)
