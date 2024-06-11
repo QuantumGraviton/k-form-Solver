@@ -9,7 +9,7 @@ For more details about the theory, we refer to our publication (see below).
 
 ## Publication
 
-This code has been used in our [publication (TBD:add link)](https://arxiv.org). All raw data used in this publication and all figures can be generated using the code provided in this repository.
+This code has been used in our [publication [arXiv:2406.05851]](https://arxiv.org/abs/2406.05851). All raw data used in this publication and all figures can be generated using the code provided in this repository.
 
 ## Compiling
 
