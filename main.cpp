@@ -15,6 +15,7 @@
 #include "utilities.hpp"
 #include "ns_einstein_cartan.hpp"
 #include "ns_einstein_cartan_rotation.hpp"
+#include "ns_einstein_cartan_hbar_spin.hpp"
 
 // --------------------------------------------------------------------
 using namespace FBS;
@@ -342,10 +343,58 @@ void EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(unsigned Nstars_i
 	std::cout << "Name of output file:" << std::endl << "output/" + plotname + ".txt" << std::endl;
 }
 
+// NS in EC with hba rspin density prescription:
+// double rho_0 [in saturation density], double beta, double gamma, string EOS_name
+void EC_star_single_hbar(double rho_0_in, double eta_tilde_in, std::string EOS_in) {
+
+	// define parameters for the 'spin densits EOS': s^2 = beta*P^gamma
+	double eta_tilde = eta_tilde_in;
+	// initial density:
+	const double sat_to_code = 0.16 * 2.886376934e-6 * 939.565379;	// conversion factor from nuclear saturation density to code units
+	double rho_0 = rho_0_in * sat_to_code; // central restmass density of the NS in units of the nucelar saturation density
+
+	// select correct EOS type:
+	std::string EOS_filepath = "";
+	     if(EOS_in == "EOS_DD2")    { EOS_filepath = "EOS_tables/eos_HS_DD2_with_electrons.beta";}
+	else if(EOS_in == "EOS_APR")    { EOS_filepath = "EOS_tables/eos_SRO_APR_SNA_version.beta";}
+	else if(EOS_in == "EOS_KDE0v1") { EOS_filepath = "EOS_tables/eos_SRO_KDE0v1_SNA_version.beta";}
+	else if(EOS_in == "EOS_LNS")    { EOS_filepath = "EOS_tables/eos_SRO_LNS_SNA_version.beta";}
+	else if(EOS_in == "EOS_FSG")    { EOS_filepath = "EOS_tables/eos_HS_FSG_with_electrons.beta";}
+	else { std::cout << "Wrong EOS! Supported EOS are: 'EOS_DD2'  'EOS_APR'  'EOS_KDE0v1'  'EOS_LNS'  'EOS_FSG' !" << std::endl; return;}
+	auto myEOS = std::make_shared<EoStable>(EOS_filepath); // (load the EOS)
+
+	// initialize one instance:
+	NSEinsteinCartanHbarSpin ECstar(myEOS, rho_0, eta_tilde);
+
+	// name of output textfile. Use stringstream for dynamic naming of output file:
+	std::stringstream stream; std::string tmp;
+	std::string plotname = "ECstarHbarSpin_profile_" + EOS_in + "_rho0_"; stream << std::fixed << std::setprecision(10) << rho_0_in; 
+	stream >> tmp; plotname += (tmp + "_eta_tilde_");  stream = std::stringstream(); stream << std::fixed << std::setprecision(10) << eta_tilde;
+	stream >> tmp; plotname += tmp;
+
+	// evaluate the model and save the intermediate data into txt file:
+	std::vector<integrator::step> results;
+    ECstar.evaluate_model(results, "output/" + plotname + ".txt");
+
+	// output global variables:
+	std::cout << "calculation complete!" << std::endl;
+	std::cout << "global quantities:" << std::endl;
+	std::vector<std::string> labels = ECstar.labels();
+	std::cout << labels[0] << " " << labels[1] << " " << labels[2] << " " << labels[3] << " " << labels[4] << " " << labels[5] << " " << labels[6] << " " << std::endl;
+	std::cout << std::fixed << std::setprecision(10) << ECstar << std::endl;
+	std::cout << "Name of output file:" << std::endl << "output/" + plotname + ".txt" << std::endl;
+}
+
+
 
 
 int main() {
+
+	EC_star_single_hbar(4.0, 1.0, "EOS_DD2");
+	EC_star_single(4.0, 0.0, 2.0, "EOS_DD2");
+
     // ----------------------------------------------------------------
+	/*
 	// Plots to create data for the figures in the paper:
 	// Total run time of the code should be 15-25 min on a laptop, depending on your machine.
 	// Figure 1:
@@ -388,6 +437,6 @@ int main() {
 	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 0., "EOS_APR", 0.1);
 	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 0., "EOS_APR", 0.2);
 	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 0., "EOS_APR", 0.3);
-	
+	*/
     return 0;
 }
