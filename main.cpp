@@ -369,7 +369,7 @@ void EC_star_single_hbar(double rho_0_in, double eta_tilde_in, std::string EOS_i
 	// name of output textfile. Use stringstream for dynamic naming of output file:
 	std::stringstream stream; std::string tmp;
 	std::string plotname = "ECstarHbarSpin_profile_" + EOS_in + "_rho0_"; stream << std::fixed << std::setprecision(10) << rho_0_in; 
-	stream >> tmp; plotname += (tmp + "_eta_tilde_");  stream = std::stringstream(); stream << std::fixed << std::setprecision(10) << eta_tilde;
+	stream >> tmp; plotname += (tmp + "_eta_tilde_drhodr_");  stream = std::stringstream(); stream << std::fixed << std::setprecision(10) << eta_tilde;
 	stream >> tmp; plotname += tmp;
 
 	// evaluate the model and save the intermediate data into txt file:
