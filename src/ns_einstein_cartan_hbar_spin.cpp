@@ -15,14 +15,15 @@ const integrator::Event NSEinsteinCartanHbarSpin::Pressure_diverging = integrato
 
 // initial conditions for two arbitrary fluids
 vector NSEinsteinCartanHbarSpin::get_initial_conditions(const double r_init) const {
-
+    //this->prev_step = std::make_pair(r_init, vector({0.0, 0.0, rho_0 > this->EOS->min_rho() ? this->EOS->get_P_from_rho(rho_0, 0.) : 0.}));
     return vector({0.0, 0.0, rho_0 > this->EOS->min_rho() ? this->EOS->get_P_from_rho(rho_0, 0.) : 0.});
 }
 
-vector NSEinsteinCartanHbarSpin::dy_dr(const double r, const vector &vars) const {
+vector NSEinsteinCartanHbarSpin::dy_dr(const double r, const vector &vars, const double r_prev, const vector &vars_prev) const {
 
 	// rename variables for convenience
     const double /*nu = vars[0],*/ lambda = vars[1]; double P = vars[2];
+    /*const double prev_nu = vars_prev[0], prev_lambda = vars_prev[1];*/ double P_prev = vars_prev[2];
 
     // load the EOS for the NS fluid:
     EquationOfState &myEOS = *(this->EOS);
@@ -31,29 +32,43 @@ vector NSEinsteinCartanHbarSpin::dy_dr(const double r, const vector &vars) const
     double etot=0.;	// total energy density of the fluid
     double rho=0; // restmass density of the fluid
     double drho_dP=0, dP_drho=0; // derivative restmass w.r.t pressure
+    double rho_prev=0; // previous timestep density
     if (P <= 0. || P < myEOS.min_P()) {
         P = 0.;
         etot = 0.;
         rho = 0;
         drho_dP = 0;
+        rho_prev=0;
+        P_prev=0;
     }
     else {
         etot = myEOS.get_e_from_P(P);
         rho = myEOS.get_rho_from_P(P);
         dP_drho = rho > myEOS.min_rho() ? myEOS.dP_drho(rho,0.) : 0.;
         drho_dP = dP_drho > 0. ? 1./dP_drho : 0.; // valid for barotropic EOS
+        // previous timestep:
+        rho_prev = myEOS.get_rho_from_P(P_prev);
     }
 
 	// define helper variables:
 	double s2 = this->eta_tilde*this->eta_tilde * rho*rho / 2.; // hbar ansatz for the spin fluid: s^2 = 1/2 (eta * hbar/2m_neutron * rho)^2 = 1/2 * eta_tilde^2 * rho^2
-    double s2_prime = this->eta_tilde*this->eta_tilde * rho * drho_dP;
+    //double s2_prime = this->eta_tilde*this->eta_tilde * rho * drho_dP;
+    double dr = r - r_prev;
+    double drho = rho - rho_prev;
+    if (dr < 1e-14) {dr=1e-14;}
+    double s2_dr = this->eta_tilde*this->eta_tilde * rho * (drho/dr); // finite difference derivative
+    //std::cout << dr << std::endl;
+    //std::cout << "drho: " << drho << std::endl;
+    
 
 	// compute the ODE:
     double dnu_dr = (std::exp(lambda) - 1.)/r + 8.*M_PI*r*std::exp(lambda)*( P - 8.*M_PI*s2 );
     double dlambda_dr = (1. - std::exp(lambda))/r + 8.*M_PI*r*std::exp(lambda)*( etot - 8.*M_PI*s2 );
-	double dP_dr = -(etot + P - 16.*M_PI*s2)/(1. - 8.*M_PI* s2_prime) * dnu_dr/2.;
+	//double dP_dr = -(etot + P - 16.*M_PI*s2)/(1. - 8.*M_PI* s2_prime) * dnu_dr/2.;
+    double dP_dr = -(etot + P - 16.*M_PI*s2) * dnu_dr/2. + 8.*M_PI* s2_dr;
     //std::cout << drho_dP << std::endl;
 
+    //this->prev_step = std::make_pair(r, vector({vars[0], vars[1], vars[2]})); //this->prev_step = std::make_pair(r, vector({vars[0], vars[1], vars[2]}) );
     return vector({dnu_dr, dlambda_dr, dP_dr});
 }
 
@@ -124,7 +139,7 @@ void NSEinsteinCartanHbarSpin::evaluate_model(std::vector<integrator::step> &res
     // define variables used in the integrator and events during integration:
     integrator::IntegrationOptions intOpts;
     intOpts.save_intermediate = true;
-    intOpts.max_stepsize = 1e-3; // smaller stepsize is needed to compute the radius more accurately
+    intOpts.max_stepsize = 1e-4; // smaller stepsize is needed to compute the radius more accurately
     // stop integration if pressure is zero:
     std::vector<integrator::Event> events = {Pressure_zero, Pressure_diverging};
     results.clear();

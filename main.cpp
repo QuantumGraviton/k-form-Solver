@@ -368,13 +368,13 @@ void EC_star_single_hbar(double rho_0_in, double eta_tilde_in, std::string EOS_i
 
 	// name of output textfile. Use stringstream for dynamic naming of output file:
 	std::stringstream stream; std::string tmp;
-	std::string plotname = "ECstarHbarSpin_profile_" + EOS_in + "_rho0_"; stream << std::fixed << std::setprecision(10) << rho_0_in; 
+	std::string plotname = "ECstarHbarSpin_profile_fd2_" + EOS_in + "_rho0_"; stream << std::fixed << std::setprecision(10) << rho_0_in; 
 	stream >> tmp; plotname += (tmp + "_eta_tilde_drhodr_");  stream = std::stringstream(); stream << std::fixed << std::setprecision(10) << eta_tilde;
 	stream >> tmp; plotname += tmp;
 
 	// evaluate the model and save the intermediate data into txt file:
 	std::vector<integrator::step> results;
-    ECstar.evaluate_model(results, "output/" + plotname + ".txt");
+    ECstar.evaluate_model(results, "output/validation/" + plotname + ".txt");
 
 	// output global variables:
 	std::cout << "calculation complete!" << std::endl;
@@ -391,7 +391,7 @@ void EC_star_single_hbar(double rho_0_in, double eta_tilde_in, std::string EOS_i
 int main() {
 
 	EC_star_single_hbar(4.0, 1.0, "EOS_DD2");
-	EC_star_single(4.0, 0.0, 2.0, "EOS_DD2");
+	//EC_star_single(4.0, 0.0, 2.0, "EOS_DD2");
 
     // ----------------------------------------------------------------
 	/*

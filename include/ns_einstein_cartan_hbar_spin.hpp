@@ -11,7 +11,7 @@ namespace FBS {
 
 // this is a class modeling a neutron star in Eistein Cartan gravity
 // constructor: EOS (ptr), EOS2 (ptr)
-class NSEinsteinCartanHbarSpin : public NSmodel {
+class NSEinsteinCartanHbarSpin : public NSmodelv2 {
 protected:
     void calculate_star_parameters(const std::vector<integrator::step>& results, const std::vector<integrator::Event>& events);
 
@@ -24,11 +24,10 @@ public:
 
 
 	NSEinsteinCartanHbarSpin(std::shared_ptr<EquationOfState> EOS, double rho_0_in, double eta_tilde_in)
-        : NSmodel(EOS), eta_tilde(eta_tilde_in), rho_0(rho_0_in), M_T(0.), R_NS(0.), R_99(0.), M_rest(0.), C(0.) {}
+        : NSmodelv2(EOS), eta_tilde(eta_tilde_in), rho_0(rho_0_in), M_T(0.), R_NS(0.), R_99(0.), M_rest(0.), C(0.) {}
 
-    //vector dy_dr(const double r, const vector& vars);  // holds the system of ODEs
 	/* The differential equations describing the neutron star in Einstein Cartan gravity. The quantities are a, alpha, P */
-    vector dy_dr(const double r, const vector& vars) const;
+    vector dy_dr(const double r, const vector& vars, const double r_prev, const vector& vars_prev) const;
 
     vector get_initial_conditions(const double r_init=R_INIT) const; // holds the FBS init conditions
     void evaluate_model(std::vector<integrator::step>& results, std::string filename="");
