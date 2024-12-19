@@ -12,8 +12,9 @@ namespace FBS {
 // A class to hold the ODE solver with the option to define events during integration.
 namespace integrator
 {
-    /* Define the ODE_system value, which is e.g. the dy_dr in the NSmodel class */
+    /* Define the ODE_system value, which is e.g. the dy_dr in the NSmodel class. v2 has knowledge on previous integation step */
     typedef vector (*ODE_system)(const double, const vector& , const void*);
+    typedef vector (*ODE_system_v2)(const double, const vector&, const double, const vector&, const void*);
 
     /* the integrator works in steps of r and the integrated variables */
     typedef std::pair<double, vector> step;
@@ -76,15 +77,19 @@ namespace integrator
 
     /* Runge-Kutta Fehlberg stepper that does one step at a time */
     bool RKF45_step(ODE_system dy_dr, double &r, double &dr, vector& y, const void* params, const IntegrationOptions& options);
+    bool RKF45_step(ODE_system_v2 dy_dr, double &r, double &dr, vector& y, double &r_prev, vector& y_prev, const void* params, const IntegrationOptions& options);
 
     /* Checks if events require smaller stepsize and only accepts steps if they do*/
     int RKF45_step_event_tester(ODE_system dy_dr, step& current_step, double& dr, const void* params,
+                                            const std::vector<Event>& events, const IntegrationOptions& options);
+    int RKF45_step_event_tester(ODE_system_v2 dy_dr, step& current_step, step& prev_step, double& dr, const void* params,
                                             const std::vector<Event>& events, const IntegrationOptions& options);
 
     /* Full Runge-Kutta Fehlberg IVP integrator, steps are output in results vector*/
     int RKF45(ODE_system dy_dr, const double r0, const vector y0, const double r_end, const void* params,
                             std::vector<step>& results, std::vector<Event>& events, const IntegrationOptions& options);
-
+    int RKF45(ODE_system_v2 dy_dr, const double r0, const vector y0, const double r_end, const void* params,
+                            std::vector<step>& results, std::vector<Event>& events, const IntegrationOptions& options);
     /* A simple cumulative trapezoid integration algorithm */
     void cumtrapz(const std::vector<double>& x, const std::vector<double>& y, std::vector<double>& res);
 
