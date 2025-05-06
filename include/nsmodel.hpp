@@ -31,6 +31,7 @@ public:
 
     /* Constructor */
     NSmodel(std::shared_ptr<EquationOfState> EOS) : r_init(R_INIT), r_end(R_MAX), EOS(EOS) {}
+    NSmodel() : r_init(R_INIT), r_end(R_MAX) {}
 
     /* This function gives the derivatives for the differential equations */
     virtual vector dy_dr(const double r, const vector& vars) const = 0;

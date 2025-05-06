@@ -3,7 +3,7 @@
 #include <utility>  // for std::swap
 
 #include "vector.hpp"
-#include "eos.hpp"
+//#include "eos.hpp"
 #include "integrator.hpp"
 #include "nsmodel.hpp"
 
@@ -16,7 +16,7 @@ protected:
     void calculate_star_parameters(const std::vector<integrator::step>& results, const std::vector<integrator::Event>& events);
     
     // placeholder EOS so that the cod edoed not break:
-    std::shared_ptr<PolytropicEoS> EOS = std::make_shared<PolytropicEoS>(100.,2.); // TODO: FIX THIS
+    //std::shared_ptr<EquationOfState> EOS; // TODO: FIX THIS
 
 public:
     
@@ -32,7 +32,7 @@ public:
 
 
 	KFormStar(double theta_in, double alpha_Tmunu_in, double beta_Tmunu_in, double phi1_0_in, double phi2_0_in, double phi3_0_in)
-        : NSmodel(EOS), theta(theta_in), alpha_Tmunu(alpha_Tmunu_in), beta_Tmunu(beta_Tmunu_in), phi1_0(phi1_0_in), phi2_0(phi2_0_in), phi3_0(phi3_0_in), M_T(0.) {}
+        : NSmodel(), theta(theta_in), alpha_Tmunu(alpha_Tmunu_in), beta_Tmunu(beta_Tmunu_in), phi1_0(phi1_0_in), phi2_0(phi2_0_in), phi3_0(phi3_0_in), M_T(0.) {}
 
     //vector dy_dr(const double r, const vector& vars);  // holds the system of ODEs
 	/* The differential equations describing the neutron star in Einstein Cartan gravity. The quantities are a, alpha, P */
