@@ -14,7 +14,7 @@ const integrator::Event KFormStar::Field_diverging = integrator::Event([](const 
 vector KFormStar::get_initial_conditions(const double r_init) const {
     //gtt, grr, phi1, phi2, phi3, Phi1, Phi2, Phi3
     return vector({-1.0, 1.0, this->phi1_0 *pow(r_init,3), this->phi2_0 *pow(r_init,3), this->phi3_0 *pow(r_init,3), 
-                    this->phi1_0* 3.*pow(r_init,2), this->phi2_0* 3.*pow(r_init,2), this->phi3_0* 3.*pow(r_init,2)});
+                    0.0, 0.0, 0.0});
 }
 
 vector KFormStar::dy_dr(const double r, const vector &vars) const {
@@ -23,28 +23,31 @@ vector KFormStar::dy_dr(const double r, const vector &vars) const {
     const double gtt = vars[0], grr = vars[1], phi1 = vars[2], phi2 = vars[3], phi3 = vars[4], Phi1 = vars[5], Phi2 = vars[6], Phi3 = vars[7];
 
     // helper variables:
+    double kappa = 8.*M_PI;
     double th = this->theta;
-    double P2 = 0.5* (3.* pow(std::cos(th),2)  - 1. );
-    double P2_dtheta = -1.5 * std::sin(2.*th);
-    double Ttt = 1.0;
-    double Trr = 1.0;
+    double P2 = (1. + 3.* std::cos(2.*th) ) / 4.;
+    double P2_dth = -1.5 * std::sin(2.*th);
+    double cot_th = std::cos(th)/std::sin(th);
+    double alpha_term_both = (phi1*phi1 + phi2*phi2 + phi3*phi3)*P2_dth*P2_dth/r/r + (2*phi1*phi1 + phi2*phi2 + phi3*phi3)*P2*P2/grr/r/r
+                            + (phi2*phi2 + phi3*phi3)*P2*P2*cot_th*cot_th/r/r  + 2.*(phi1*phi2)*P2*P2*cot_th/std::sqrt(grr)/r/r
+                            - 2.*(phi1*phi2 - phi2*phi1)*P2*P2_dth/std::sqrt(grr)/r/r;
+
+    double Ttt = -0.5*this->alpha_Tmunu*gtt*(Phi1*Phi1 + Phi2*Phi2 + Phi3*Phi3)*P2*P2/grr - 0.5*this->alpha_Tmunu*gtt* alpha_term_both;
+    double Trr = 0.5*this->alpha_Tmunu*(Phi1*Phi1 + Phi2*Phi2 + Phi3*Phi3)*P2*P2 - 0.5*this->alpha_Tmunu*grr* alpha_term_both;
 
 	// compute the ODE:
     // metric components
-    double dgtt_dr = 1.;
-    double dgrr_dr = 1.;
+    double dgtt_dr = gtt* ( (grr*grr - 1.)/r + kappa*r*grr*grr*Trr );
+    double dgrr_dr = grr* ( (1. - grr*grr)/r + kappa*r*grr*grr*Ttt );
     // field first derivatives
     double dphi1_dr = Phi1;
     double dphi2_dr = Phi2;
     double dphi3_dr = Phi3;
-    // firls second derivatives
-    double dPhi1_dr = 1.0;
-    double dPhi2_dr = 1.0;
-    double dPhi3_dr = 1.0;
-
-	//double da_dr = 0.5* a *      ( (1.-a*a) / r + 8.*M_PI*r*a*a*( etot - 8.*M_PI*s2 ) );
-    //double dalpha_dr = 0.5* alpha * ( (a*a-1.) / r + 8.*M_PI*r*a*a*( P - 8.*M_PI*s2 ) );
-	//double dP_dr = -(etot + P - 16.*M_PI*s2)/(1. - 8.*M_PI* s2_prime) * dalpha_dr/alpha;
+    // field second derivatives
+    double bracket_term = dgrr_dr/grr - dgtt_dr/gtt - 2./r;
+    double dPhi1_dr = 6.*grr*phi1/r/r + bracket_term*Phi1 + 2.*phi1/r/r + 2.*std::sqrt(grr)*cot_th*phi2/r/r - 3.*std::sqrt(grr)*std::sin(2.*th)*phi2/P2/r/r;
+    double dPhi2_dr = 6.*grr*phi2/r/r + bracket_term*Phi2 + ( cot_th*cot_th/r/r + 1./(r*r*grr) )*grr*phi2 + 3.*std::sqrt(grr)*std::sin(2.*th)*phi1/P2/r/r;
+    double dPhi3_dr = 6.*grr*phi3/r/r + bracket_term*Phi3 + ( cot_th*cot_th/r/r + 1./(r*r*grr) )*grr*phi3;
 
     return vector({dgtt_dr, dgrr_dr, dphi1_dr, dphi2_dr, dphi3_dr, dPhi1_dr, dPhi2_dr, dPhi3_dr});
 }
@@ -71,7 +74,7 @@ void KFormStar::evaluate_model(std::vector<integrator::step> &results, std::stri
     // define variables used in the integrator and events during integration:
     integrator::IntegrationOptions intOpts;
     intOpts.save_intermediate = true;
-    intOpts.max_stepsize = 1e-3; // smaller stepsize is needed to computethe radius more accurately
+    intOpts.max_stepsize = 1e-1; // smaller stepsize is needed to computethe radius more accurately
     // stop integration if pressure is zero:
     std::vector<integrator::Event> events = {Field_diverging};
     results.clear();

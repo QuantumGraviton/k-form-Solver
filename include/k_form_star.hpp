@@ -20,15 +20,16 @@ protected:
 
 public:
     
-    double M_T; // total ADM mass M_T
-
-    double theta = 1.5; // polar angle in radians
-    double alpha_Tmunu = 1.0; // alpha-parameter in energy momentum tensor
-    double beta_Tmunu = 1.0; // beta-parameter in energy momentum tensor
+    double theta; // polar angle in radians
+    double alpha_Tmunu; // alpha-parameter in energy momentum tensor
+    double beta_Tmunu; // beta-parameter in energy momentum tensor
     // initial field values:
-    double phi1_0 = 0.01;
-    double phi2_0 = 0.01;
-    double phi3_0 = 0.01;
+    double phi1_0;
+    double phi2_0;
+    double phi3_0;
+
+    // global parameters of the k-form star:
+    double M_T; // total ADM mass M_T
 
 
 	KFormStar(double theta_in, double alpha_Tmunu_in, double beta_Tmunu_in, double phi1_0_in, double phi2_0_in, double phi3_0_in)

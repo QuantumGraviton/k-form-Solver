@@ -16,9 +16,45 @@
 #include "ns_einstein_cartan.hpp"
 #include "ns_einstein_cartan_rotation.hpp"
 #include "ns_einstein_cartan_hbar_spin.hpp"
+#include "k_form_star.hpp"
 
 // --------------------------------------------------------------------
 using namespace FBS;
+
+void k_form_star_single() {
+	// define parameters for the 'spin densits EOS': s^2 = beta*P^gamma
+	double alpha_Tmunu = 1000.0; //beta_in;
+	double theta = 0.6 * M_PI;
+	double phi1_0 = -1e10;
+    double phi2_0 = 0.1e10;
+    double phi3_0 = 1e10;
+
+
+	// initialize one instance:
+	KFormStar KFstar(theta, alpha_Tmunu, 0.0, phi1_0, phi2_0, phi3_0);
+
+	// name of output textfile. Use stringstream for dynamic naming of output file:
+	std::stringstream stream; std::string tmp;
+	std::string plotname = "K_Form_star_profile_alphTmn_"; stream << std::fixed << std::setprecision(5) << alpha_Tmunu;
+	stream >> tmp; plotname += (tmp + "_theta_");  stream = std::stringstream(); stream << std::fixed << std::setprecision(5) << theta;
+	stream >> tmp; plotname += (tmp + "_initphi_");  stream = std::stringstream(); stream << std::fixed << std::setprecision(5) << phi1_0;
+	stream >> tmp; plotname += (tmp + "_"); stream = std::stringstream(); stream << std::fixed << std::setprecision(5) << phi2_0;
+	stream >> tmp; plotname += (tmp + "_"); stream = std::stringstream(); stream << std::fixed << std::setprecision(5) << phi3_0;
+	stream >> tmp; plotname += tmp;
+
+	// evaluate the model and save the intermediate data into txt file:
+	std::vector<integrator::step> results;
+    KFstar.evaluate_model(results, "output/" + plotname + ".txt");
+
+	// output global variables:
+	std::cout << "calculation complete!" << std::endl;
+	std::cout << "global quantities:" << std::endl;
+	std::vector<std::string> labels = KFstar.labels();
+	std::cout << labels[0] << " " << labels[1] << " " << labels[2] << " " << labels[3] << " " << labels[4] << " " << labels[5] << " " << labels[6] << std::endl;
+	std::cout << std::fixed << std::setprecision(10) << KFstar << std::endl;
+	std::cout << "Name of output file:" << std::endl << "output/" + plotname + ".txt" << std::endl;
+}
+
 
 // computes a single neutron star in Einstein-Cartan gravity and saves the radial profile into a file
 // double rho_0 [in saturation density], double beta, double gamma, string EOS_name
@@ -390,53 +426,7 @@ void EC_star_single_hbar(double rho_0_in, double eta_tilde_in, std::string EOS_i
 
 int main() {
 
-	EC_star_single_hbar(4.0, 1.0, "EOS_DD2");
-	//EC_star_single(4.0, 0.0, 2.0, "EOS_DD2");
+	k_form_star_single();
 
-    // ----------------------------------------------------------------
-	/*
-	// Plots to create data for the figures in the paper:
-	// Total run time of the code should be 15-25 min on a laptop, depending on your machine.
-	// Figure 1:
-	EC_star_single(4.0, 0.0, 2.0, "EOS_DD2");
-	EC_star_single(4.0, 0.0, 2.0, "EOS_APR");
-	// Figure 2:
-	EC_star_curve(200, 0.6, 10.0, 0.0, 2.0, "EOS_DD2");
-	EC_star_curve(200, 0.6, 10.0, 10.0, 2.0, "EOS_DD2");
-	EC_star_curve(200, 0.6, 10.0, 20.0, 2.0, "EOS_DD2");
-	EC_star_curve(200, 0.6, 10.0, 100.0, 2.0, "EOS_DD2");
-	EC_star_curve(200, 0.7, 10.0, 0.0, 2.0, "EOS_APR");
-	EC_star_curve(200, 0.7, 10.0, 10.0, 2.0, "EOS_APR");
-	EC_star_curve(200, 0.7, 10.0, 20.0, 2.0, "EOS_APR");
-	EC_star_curve(200, 0.7, 10.0, 100.0, 2.0, "EOS_APR");
-	// Figure 3:
-	EC_star_curve_const_mass_with_different_beta(250, 0.8, "M_rest", 0.0, 101., 2.0, "EOS_DD2");
-	EC_star_curve_const_mass_with_different_beta(250, 1.0, "M_rest", 0.0, 101., 2.0, "EOS_DD2");
-	EC_star_curve_const_mass_with_different_beta(250, 1.4, "M_rest", 0.0, 101., 2.0, "EOS_DD2");
-	EC_star_curve_const_mass_with_different_beta(250, 2.0, "M_rest", 0.0, 101., 2.0, "EOS_DD2");
-	EC_star_curve_const_mass_with_different_beta(250, 0.8, "M_rest", 0.0, 1.0e6, 3.0, "EOS_DD2");
-	EC_star_curve_const_mass_with_different_beta(250, 1.0, "M_rest", 0.0, 1.0e6, 3.0, "EOS_DD2");
-	EC_star_curve_const_mass_with_different_beta(250, 1.4, "M_rest", 0.0, 1.0e6, 3.0, "EOS_DD2");
-	EC_star_curve_const_mass_with_different_beta(250, 2.0, "M_rest", 0.0, 1.0e6, 3.0, "EOS_DD2");
-	// Figure 4:
-	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 0., "EOS_DD2", 0.0);
-	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 100., "EOS_DD2", 0.0);
-	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 200., "EOS_DD2", 0.0);
-	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 300., "EOS_DD2", 0.0);
-
-	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 0., "EOS_DD2", 0.1);
-	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 0., "EOS_DD2", 0.2);
-	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 0., "EOS_DD2", 0.3);
-
-	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 0., "EOS_APR", 0.0);
-	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 100., "EOS_APR", 0.0);
-	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 200., "EOS_APR", 0.0);
-	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 300., "EOS_APR", 0.0);
-	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 400., "EOS_APR", 0.0);
-
-	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 0., "EOS_APR", 0.1);
-	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 0., "EOS_APR", 0.2);
-	EC_star_curve_rotation_rate_model_e_plus_P_beta_iteration(200, 0.6, 10.0, 0., "EOS_APR", 0.3);
-	*/
     return 0;
 }
